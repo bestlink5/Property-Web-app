@@ -1,0 +1,6 @@
+{
+  "name": "PropertyMarkaz - Pakistan Real Estate Portal",
+  "description": "Pakistan's modern real estate marketplace for buying, selling, and renting houses, plots, apartments, and commercial properties across Islamabad, Lahore, Karachi, Rawalpindi, Mirpur AJK, and nationwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
