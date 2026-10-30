@@ -5,11 +5,14 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { SupabaseIntegrationModal } from './components/common/SupabaseIntegrationModal';
+import { ApkDownloadModal } from './components/common/ApkDownloadModal';
+import { MobileInstallBanner } from './components/common/MobileInstallBanner';
 import { AuthModal } from './components/auth/AuthModal';
 
 import { HomePage } from './components/pages/HomePage';
 import { ListingPage } from './components/pages/ListingPage';
 import { PropertyDetailsView } from './components/property/PropertyDetailsView';
+import { EditApprovedPropertyModal } from './components/property/EditApprovedPropertyModal';
 import { AddPropertyForm } from './components/forms/AddPropertyForm';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AgentProfileView } from './components/agents/AgentProfileView';
@@ -70,9 +73,12 @@ const AppContent: React.FC = () => {
       {/* Mobile-First Bottom Navigation Bar */}
       <MobileBottomNav />
 
-      {/* Modals */}
+      {/* Modals and Banners */}
       <AuthModal />
+      <EditApprovedPropertyModal />
       <SupabaseIntegrationModal />
+      <ApkDownloadModal />
+      <MobileInstallBanner />
 
       {/* Toast Notifications */}
       {notifications.length > 0 && (

@@ -16,6 +16,9 @@ import {
   Clock,
   Layers,
   Building,
+  Download,
+  FileCode,
+  Edit3,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -25,8 +28,24 @@ export const AdminDashboard: React.FC = () => {
     rejectProperty,
     deleteProperty,
     toggleFeatured,
+    openEditPropertyModal,
     navigateToProperty,
+    addToast,
   } = usePropertyContext();
+
+  const handleExportJson = () => {
+    const jsonStr = JSON.stringify(properties, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'properties.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    addToast('Exported properties.json successfully!', 'success');
+  };
 
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +102,16 @@ export const AdminDashboard: React.FC = () => {
           <p className="text-xs text-slate-500 mt-0.5">
             Review, verify legal clearances, approve genuine listings, and manage fraud prevention.
           </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportJson}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-xs"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export Raw JSON ({properties.length})</span>
+          </button>
         </div>
       </div>
 
@@ -244,8 +273,25 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* City / Location */}
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 block">{p.city}</span>
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <span className="font-semibold text-slate-800">{p.city}</span>
+                        {p.developmentType && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                            {p.developmentType}
+                          </span>
+                        )}
+                        {p.isCustomLocation && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                            Custom
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[11px] text-slate-500 line-clamp-1">{p.location}</span>
+                      {p.landDetails?.khasraNumber && (
+                        <span className="text-[10px] text-amber-800 font-mono block mt-0.5">
+                          {p.landDetails.khasraNumber} · {p.landDetails.titleType || 'Registry'}
+                        </span>
+                      )}
                     </td>
 
                     {/* Price & Area */}
@@ -267,10 +313,17 @@ export const AdminDashboard: React.FC = () => {
                     {/* Status */}
                     <td className="py-3 px-4">
                       {p.status === 'approved' && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
-                          <CheckCircle className="w-3 h-3" />
-                          Approved
-                        </span>
+                        <div>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
+                            <CheckCircle className="w-3 h-3" />
+                            Approved
+                          </span>
+                          {p.updatedAt && (
+                            <span className="text-[10px] text-slate-500 block mt-0.5" title={`Last updated: ${p.updatedAt}`}>
+                              Updated {new Date(p.updatedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       )}
                       {p.status === 'pending' && (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">
@@ -296,6 +349,16 @@ export const AdminDashboard: React.FC = () => {
                     {/* Action buttons */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* Edit Price, Land or Agent */}
+                        <button
+                          onClick={() => openEditPropertyModal(p.id)}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded text-[11px] font-bold transition-colors cursor-pointer border border-emerald-200"
+                          title="Edit Price, Land, or Owner/Agent"
+                        >
+                          <Edit3 className="w-3 h-3 text-emerald-700" />
+                          <span>Edit</span>
+                        </button>
+
                         {/* Approve */}
                         {p.status !== 'approved' && (
                           <button
@@ -342,11 +405,7 @@ export const AdminDashboard: React.FC = () => {
 
                         {/* Delete */}
                         <button
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete listing ${p.id}?`)) {
-                              deleteProperty(p.id);
-                            }
-                          }}
+                          onClick={() => deleteProperty(p.id)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                           title="Delete Listing"
                         >

@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
-import { Database, ShieldAlert, Sparkles, ExternalLink } from 'lucide-react';
+import { Database, ShieldAlert, Sparkles, ExternalLink, Smartphone } from 'lucide-react';
 
 export const DemoBanner: React.FC = () => {
-  const { setShowSupabaseModal, currentUser, switchDemoRole } = usePropertyContext();
+  const { setShowSupabaseModal, setShowApkModal, currentUser, switchDemoRole } = usePropertyContext();
 
   return (
     <div className="bg-slate-900 text-slate-200 text-xs py-2 px-4 border-b border-slate-800">
@@ -37,11 +37,19 @@ export const DemoBanner: React.FC = () => {
           </div>
 
           <button
+            onClick={() => setShowApkModal(true)}
+            className="flex items-center gap-1 bg-emerald-700/60 hover:bg-emerald-700 text-emerald-200 hover:text-white px-2.5 py-1 rounded transition-colors font-medium cursor-pointer border border-emerald-600/40"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Android APK</span>
+          </button>
+
+          <button
             onClick={() => setShowSupabaseModal(true)}
             className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors font-medium cursor-pointer"
           >
             <Database className="w-3.5 h-3.5" />
-            <span>Supabase & Hosting Guide</span>
+            <span>Supabase Guide</span>
           </button>
         </div>
       </div>

@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
-import { X, Check, Copy, Database, Server, KeyRound, Globe, HardDrive, ShieldCheck } from 'lucide-react';
+import { PAKISTAN_CITIES, PAKISTAN_PROVINCES, PROPERTY_TYPES } from '../../data/locations';
+import { X, Check, Copy, Database, Server, KeyRound, Globe, HardDrive, ShieldCheck, FileCode, Download, ExternalLink } from 'lucide-react';
 
 export const SupabaseIntegrationModal: React.FC = () => {
-  const { showSupabaseModal, setShowSupabaseModal, addToast } = usePropertyContext();
-  const [activeTab, setActiveTab] = useState<'deployment' | 'database' | 'auth' | 'storage'>('deployment');
+  const { showSupabaseModal, setShowSupabaseModal, addToast, properties } = usePropertyContext();
+  const [activeTab, setActiveTab] = useState<'deployment' | 'database' | 'json' | 'auth' | 'storage'>('json');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [selectedJsonType, setSelectedJsonType] = useState<'properties' | 'locations'>('properties');
 
   if (!showSupabaseModal) return null;
+
+  const downloadJson = (data: any, filename: string) => {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    addToast(`Downloaded ${filename} successfully!`, 'success');
+  };
 
   const copyToClipboard = (text: string, section: string) => {
     navigator.clipboard.writeText(text);
@@ -131,21 +147,21 @@ CREATE POLICY "Admins have full access"
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-slate-200 bg-white px-6">
+        <div className="flex border-b border-slate-200 bg-white px-6 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('deployment')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors ${
-              activeTab === 'deployment'
+            onClick={() => setActiveTab('json')}
+            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+              activeTab === 'json'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Globe className="w-4 h-4" />
-            Free Hosting & Preview
+            <FileCode className="w-4 h-4 text-emerald-600" />
+            Raw JSON Files
           </button>
           <button
             onClick={() => setActiveTab('database')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'database'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -155,8 +171,19 @@ CREATE POLICY "Admins have full access"
             PostgreSQL Schema
           </button>
           <button
+            onClick={() => setActiveTab('deployment')}
+            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+              activeTab === 'deployment'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            Free Hosting & Preview
+          </button>
+          <button
             onClick={() => setActiveTab('auth')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'auth'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -167,7 +194,7 @@ CREATE POLICY "Admins have full access"
           </button>
           <button
             onClick={() => setActiveTab('storage')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`py-3 px-4 text-xs font-semibold border-b-2 -mb-px flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'storage'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -180,6 +207,94 @@ CREATE POLICY "Admins have full access"
 
         {/* Tab Content */}
         <div className="p-6 overflow-y-auto space-y-4 text-sm text-slate-600">
+          {activeTab === 'json' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-950 text-xs">
+                <div>
+                  <span className="font-bold block text-emerald-900">Raw JSON Data Files Available</span>
+                  <span>Both properties dataset and Pakistan locations taxonomy are available as standalone raw JSON files.</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (selectedJsonType === 'properties') {
+                        downloadJson(properties, 'properties.json');
+                      } else {
+                        downloadJson({ provinces: PAKISTAN_PROVINCES, cities: PAKISTAN_CITIES, propertyTypes: PROPERTY_TYPES }, 'locations.json');
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download {selectedJsonType === 'properties' ? 'properties.json' : 'locations.json'}</span>
+                  </button>
+                  <a
+                    href={selectedJsonType === 'properties' ? '/data/properties.json' : '/data/locations.json'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-md text-xs font-semibold transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open Raw URL</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* JSON Switcher: properties vs locations */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedJsonType('properties')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                      selectedJsonType === 'properties'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    properties.json ({properties.length} listings)
+                  </button>
+                  <button
+                    onClick={() => setSelectedJsonType('locations')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                      selectedJsonType === 'locations'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    locations.json ({PAKISTAN_CITIES.length} cities & sectors)
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const text = selectedJsonType === 'properties'
+                      ? JSON.stringify(properties, null, 2)
+                      : JSON.stringify({ provinces: PAKISTAN_PROVINCES, cities: PAKISTAN_CITIES, propertyTypes: PROPERTY_TYPES }, null, 2);
+                    copyToClipboard(text, 'json');
+                  }}
+                  className="flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer"
+                >
+                  {copiedSection === 'json' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedSection === 'json' ? 'Copied' : 'Copy Full JSON'}</span>
+                </button>
+              </div>
+
+              {/* Code display */}
+              <div className="relative">
+                <pre className="bg-slate-950 text-emerald-300 p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-80 leading-relaxed border border-slate-800">
+                  {selectedJsonType === 'properties'
+                    ? JSON.stringify(properties, null, 2)
+                    : JSON.stringify({ provinces: PAKISTAN_PROVINCES, cities: PAKISTAN_CITIES, propertyTypes: PROPERTY_TYPES }, null, 2)}
+                </pre>
+              </div>
+
+              <div className="text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2">
+                <span>Static disk path: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">/public/data/{selectedJsonType}.json</code></span>
+                <span>Direct endpoint: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">/data/{selectedJsonType}.json</code></span>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'deployment' && (
             <div className="space-y-4">
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-xs leading-relaxed">

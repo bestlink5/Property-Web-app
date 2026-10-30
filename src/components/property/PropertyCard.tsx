@@ -2,7 +2,22 @@ import React, { useState } from 'react';
 import { Property } from '../../types/property';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { formatPKR, formatArea, getWhatsAppUrl } from '../../utils/formatters';
-import { Bed, Bath, Maximize2, MapPin, Heart, MessageCircle, ArrowRight, ShieldCheck, Building } from 'lucide-react';
+import {
+  Bed,
+  Bath,
+  Maximize2,
+  MapPin,
+  Heart,
+  MessageCircle,
+  ArrowRight,
+  ShieldCheck,
+  Building,
+  Edit3,
+  Landmark,
+  Compass,
+  Trees,
+  FileCheck,
+} from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -10,7 +25,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = false }) => {
-  const { navigateToProperty, toggleSaveProperty, isPropertySaved } = usePropertyContext();
+  const { navigateToProperty, toggleSaveProperty, isPropertySaved, openEditPropertyModal } = usePropertyContext();
   const [imageError, setImageError] = useState(false);
   const isSaved = isPropertySaved(property.id);
 
@@ -38,17 +53,57 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
           </div>
         )}
 
-        {/* Top Badges overlay: Clean, restrained */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
-          <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[11px] font-semibold px-2 py-0.5 rounded">
+        {/* Top Badges overlay */}
+        <div className="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1 z-10 max-w-[80%]">
+          <span className="bg-slate-900/85 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs">
             {property.purpose === 'buy' ? 'For Sale' : 'For Rent'}
           </span>
+
+          {property.developmentType && (
+            <span
+              className={`backdrop-blur-xs text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 ${
+                property.developmentType === 'Private Land'
+                  ? 'bg-amber-900/90 text-amber-200'
+                  : property.developmentType === 'Sector'
+                  ? 'bg-sky-900/90 text-sky-200'
+                  : property.developmentType === 'Society'
+                  ? 'bg-emerald-900/90 text-emerald-200'
+                  : 'bg-indigo-900/90 text-indigo-200'
+              }`}
+            >
+              {property.developmentType === 'Sector' && <Landmark className="w-2.5 h-2.5" />}
+              {property.developmentType === 'Society' && <Building className="w-2.5 h-2.5" />}
+              {property.developmentType === 'Town' && <Compass className="w-2.5 h-2.5" />}
+              {property.developmentType === 'Private Land' && <Trees className="w-2.5 h-2.5" />}
+              <span>{property.developmentType}</span>
+            </span>
+          )}
+
+          {property.isCustomLocation && (
+            <span className="bg-purple-900/85 backdrop-blur-xs text-purple-200 text-[9px] font-mono px-1.5 py-0.5 rounded">
+              Custom
+            </span>
+          )}
+
           {property.featured && (
-            <span className="bg-amber-600/90 backdrop-blur-xs text-white text-[11px] font-semibold px-2 py-0.5 rounded">
+            <span className="bg-amber-600/90 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded">
               Featured
             </span>
           )}
         </div>
+
+        {/* Quick Edit button overlay */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            openEditPropertyModal(property.id);
+          }}
+          aria-label="Edit price, land or contact"
+          title="Edit price, land or owner/agent"
+          className="absolute top-2.5 right-12 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs text-slate-700 hover:text-emerald-700 hover:bg-white flex items-center justify-center transition-colors shadow-xs z-10 cursor-pointer"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
 
         {/* Save button overlay */}
         <button
@@ -62,11 +117,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
           <Heart className={`w-4 h-4 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
         </button>
 
-        {/* Demo data marker */}
-        <div className="absolute bottom-2 left-2 z-10">
+        {/* Demo data marker & updated tag */}
+        <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
           <span className="bg-black/60 backdrop-blur-xs text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">
             Demo Listing #{property.id}
           </span>
+          {property.updatedAt && (
+            <span className="bg-emerald-900/80 backdrop-blur-xs text-emerald-300 text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              Updated
+            </span>
+          )}
         </div>
       </div>
 
@@ -81,9 +141,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
                 <span className="text-xs font-normal text-slate-500 ml-1 font-sans">/ month</span>
               )}
             </span>
-            <span className="text-xs font-semibold text-emerald-800">
-              {property.type}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {property.priceNegotiable !== false && (
+                <span className="text-[10px] text-slate-400 font-medium">Neg.</span>
+              )}
+              <span className="text-xs font-semibold text-emerald-800">
+                {property.type}
+              </span>
+            </div>
           </div>
 
           {/* Location */}
@@ -124,6 +189,29 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
                   <Bath className="w-3.5 h-3.5 text-slate-400" />
                   <span>{property.bathrooms} Baths</span>
                 </div>
+              </>
+            )}
+
+            {property.landDetails?.titleType && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="text-amber-800 font-semibold">{property.landDetails.titleType}</span>
+              </>
+            )}
+
+            {property.landDetails?.khasraNumber && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-600 font-mono text-[11px] truncate max-w-[150px]">
+                  {property.landDetails.khasraNumber}
+                </span>
+              </>
+            )}
+
+            {property.landDetails?.roadFrontageFt && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-600">{property.landDetails.roadFrontageFt}ft Frontage</span>
               </>
             )}
           </div>

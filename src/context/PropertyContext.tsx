@@ -41,10 +41,14 @@ interface PropertyContextType {
   toggleSaveProperty: (id: string) => void;
   isPropertySaved: (id: string) => boolean;
   addProperty: (propertyData: Omit<Property, 'id' | 'createdAt' | 'viewsCount' | 'status' | 'isDemo'>) => string;
+  updateProperty: (id: string, updates: Partial<Property>, customSuccessMessage?: string) => void;
   approveProperty: (id: string) => void;
   rejectProperty: (id: string, reason: string) => void;
   deleteProperty: (id: string) => void;
   toggleFeatured: (id: string) => void;
+  editingPropertyId: string | null;
+  setEditingPropertyId: (id: string | null) => void;
+  openEditPropertyModal: (id: string) => void;
   agents: Agent[];
   notifications: ToastNotification[];
   addToast: (message: string, type?: 'success' | 'info' | 'error') => void;
@@ -55,6 +59,8 @@ interface PropertyContextType {
   setAuthModalTab: (tab: 'login' | 'register') => void;
   showSupabaseModal: boolean;
   setShowSupabaseModal: (show: boolean) => void;
+  showApkModal: boolean;
+  setShowApkModal: (show: boolean) => void;
   navigateToProperty: (id: string) => void;
   navigateToAgent: (id: string) => void;
   switchDemoRole: (role: 'guest' | 'buyer' | 'seller' | 'agent' | 'admin') => void;
@@ -65,6 +71,8 @@ const DEFAULT_FILTERS: PropertyFilterState = {
   city: '',
   area: '',
   type: '',
+  developmentType: 'all',
+  developmentName: '',
   minPrice: null,
   maxPrice: null,
   minBedrooms: null,
@@ -131,6 +139,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
   const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
+  const [showApkModal, setShowApkModal] = useState<boolean>(false);
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
 
   // Sync properties to localStorage
   useEffect(() => {
@@ -260,6 +270,33 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
   };
 
+  const updateProperty = (
+    id: string,
+    updates: Partial<Property>,
+    customSuccessMessage?: string
+  ) => {
+    setProperties((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          return {
+            ...p,
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return p;
+      })
+    );
+    addToast(
+      customSuccessMessage || `Listing ${id} updated: Details saved successfully!`,
+      'success'
+    );
+  };
+
+  const openEditPropertyModal = (id: string) => {
+    setEditingPropertyId(id);
+  };
+
   const switchDemoRole = (role: 'guest' | 'buyer' | 'seller' | 'agent' | 'admin') => {
     if (role === 'guest') {
       setCurrentUser(null);
@@ -339,6 +376,57 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       return false;
     }
 
+    // Development Type filter (Sector, Society, Town, Private Land)
+    if (filters.developmentType !== 'all') {
+      if (item.developmentType) {
+        if (item.developmentType !== filters.developmentType) {
+          return false;
+        }
+      } else {
+        // Inferred fallback for legacy or demo listings without explicit developmentType
+        const locLower = item.location.toLowerCase();
+        if (filters.developmentType === 'Sector' && !locLower.includes('sector')) return false;
+        if (
+          filters.developmentType === 'Society' &&
+          !(
+            locLower.includes('dha') ||
+            locLower.includes('bahria') ||
+            locLower.includes('society') ||
+            locLower.includes('city') ||
+            locLower.includes('enclave') ||
+            locLower.includes('greens') ||
+            locLower.includes('hills') ||
+            locLower.includes('scheme')
+          )
+        )
+          return false;
+        if (filters.developmentType === 'Town' && !locLower.includes('town')) return false;
+        if (
+          filters.developmentType === 'Private Land' &&
+          !(
+            item.type === 'Private Land' ||
+            item.type === 'Agricultural Land' ||
+            item.type === 'Farmhouse Land' ||
+            locLower.includes('mouza') ||
+            locLower.includes('khasra') ||
+            locLower.includes('chak')
+          )
+        )
+          return false;
+      }
+    }
+
+    // Development name specific filter
+    if (filters.developmentName && filters.developmentName.trim() !== '') {
+      const devQ = filters.developmentName.toLowerCase();
+      const matchDevName = item.developmentName?.toLowerCase().includes(devQ);
+      const matchLoc = item.location.toLowerCase().includes(devQ);
+      const matchMouza = item.landDetails?.mouzaName?.toLowerCase().includes(devQ);
+      if (!matchDevName && !matchLoc && !matchMouza) {
+        return false;
+      }
+    }
+
     // Min price
     if (filters.minPrice !== null && item.price < filters.minPrice) {
       return false;
@@ -381,7 +469,21 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const matchCity = item.city.toLowerCase().includes(q);
       const matchDesc = item.description.toLowerCase().includes(q);
       const matchType = item.type.toLowerCase().includes(q);
-      if (!matchTitle && !matchLoc && !matchCity && !matchDesc && !matchType) {
+      const matchDev = item.developmentName?.toLowerCase().includes(q);
+      const matchMouza = item.landDetails?.mouzaName?.toLowerCase().includes(q);
+      const matchKhasra = item.landDetails?.khasraNumber?.toLowerCase().includes(q);
+      const matchTitleType = item.landDetails?.titleType?.toLowerCase().includes(q);
+      if (
+        !matchTitle &&
+        !matchLoc &&
+        !matchCity &&
+        !matchDesc &&
+        !matchType &&
+        !matchDev &&
+        !matchMouza &&
+        !matchKhasra &&
+        !matchTitleType
+      ) {
         return false;
       }
     }
@@ -427,10 +529,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         toggleSaveProperty,
         isPropertySaved,
         addProperty,
+        updateProperty,
         approveProperty,
         rejectProperty,
         deleteProperty,
         toggleFeatured,
+        editingPropertyId,
+        setEditingPropertyId,
+        openEditPropertyModal,
         agents: DEMO_AGENTS,
         notifications,
         addToast,
@@ -441,6 +547,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         setAuthModalTab,
         showSupabaseModal,
         setShowSupabaseModal,
+        showApkModal,
+        setShowApkModal,
         navigateToProperty,
         navigateToAgent,
         switchDemoRole,

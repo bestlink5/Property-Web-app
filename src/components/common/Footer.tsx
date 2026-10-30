@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
-import { Building2, MapPin, Phone, Mail, ShieldCheck, Heart, Database } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, ShieldCheck, Heart, Database, Smartphone } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setActiveView, setFilters, setShowSupabaseModal } = usePropertyContext();
+  const { setActiveView, setFilters, setShowSupabaseModal, setShowApkModal } = usePropertyContext();
 
   const handleCityClick = (city: string) => {
     setFilters((prev) => ({ ...prev, city, purpose: 'all' }));
@@ -47,13 +47,21 @@ export const Footer: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowApkModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-emerald-600 shadow-xs"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Download Android APK</span>
+              </button>
+
               <button
                 onClick={() => setShowSupabaseModal(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-slate-700"
               >
                 <Database className="w-3.5 h-3.5" />
-                <span>Supabase & Free Deployment Setup</span>
+                <span>Supabase & Data Setup</span>
               </button>
             </div>
           </div>
@@ -144,6 +152,15 @@ export const Footer: React.FC = () => {
                   className="hover:text-emerald-400 transition-colors cursor-pointer"
                 >
                   Admin Verification Portal
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setShowApkModal(true)}
+                  className="hover:text-emerald-400 text-emerald-400 font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Download Android APK / App</span>
                 </button>
               </li>
               <li>

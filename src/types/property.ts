@@ -8,7 +8,24 @@ export type PropertyType =
   | 'Shop'
   | 'Office'
   | 'Agricultural Land'
+  | 'Private Land'
+  | 'Farmhouse Land'
   | 'Penthouse';
+
+export type DevelopmentType = 'Sector' | 'Society' | 'Town' | 'Private Land' | 'General Area';
+
+export interface LandDetails {
+  landClassification?: 'Agricultural' | 'Residential Sub-division' | 'Commercial Belt' | 'Farmhouse / Orchard' | 'Industrial' | 'Raw Land';
+  mouzaName?: string; // e.g. Mouza Shah Allah Ditta, Mouza Sihala, Mouza Chakri
+  khasraNumber?: string; // e.g. Khasra # 412/1, Khatooni # 88
+  titleType?: 'Registry & Inteqal' | 'Fard Malkiat' | 'Allotment File' | 'Power of Attorney' | 'Shamlat Deh' | 'Other Legal Deed';
+  possessionStatus?: 'Immediate Physical Possession' | 'Demarcated with Boundary Pillars' | 'Boundary Wall Constructed' | 'Open / Undemarcated';
+  roadFrontageFt?: number; // e.g. 150 ft
+  roadAccessType?: 'Main Highway / Carpet Road' | 'Link Road (Paved)' | 'Soling Road' | 'Pagdandi / Kacha Rasta';
+  roadWidthFt?: number; // e.g. 40, 60, 100 ft
+  waterSource?: 'Tube Well Installed' | 'Sweet Ground Boring' | 'Canal Water (Nehari Paani)' | 'Municipal Line' | 'None';
+  electricityStatus?: 'Transformer Installed / 3-Phase' | 'Single Phase Available' | 'Nearby Pole' | 'Off-Grid / Solar Needed';
+}
 
 export type AreaUnit = 'Marla' | 'Kanal' | 'Sq. Yd' | 'Sq. Ft';
 
@@ -51,6 +68,10 @@ export interface Property {
   province: Province;
   city: string;
   location: string; // Specific address / Sector / Phase
+  developmentType?: DevelopmentType;
+  developmentName?: string; // e.g. "Sector B-17", "Bahria Town Phase 8", "Model Town", "Mouza Shah Allah Ditta"
+  isCustomLocation?: boolean;
+  landDetails?: LandDetails;
   areaValue: number;
   areaUnit: AreaUnit;
   coveredAreaSqFt?: number;
@@ -67,6 +88,9 @@ export interface Property {
   rejectionReason?: string;
   featured: boolean;
   createdAt: string;
+  updatedAt?: string;
+  updateNote?: string;
+  priceNegotiable?: boolean;
   viewsCount: number;
   isDemo: boolean;
   sellerType: 'Owner' | 'Agent' | 'Builder';
@@ -77,6 +101,8 @@ export interface PropertyFilterState {
   city: string;
   area: string;
   type: string;
+  developmentType: 'all' | DevelopmentType;
+  developmentName: string;
   minPrice: number | null;
   maxPrice: number | null;
   minBedrooms: number | null;
