@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
-import { Building2, MapPin, Phone, Mail, ShieldCheck, Heart, Database, Smartphone } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, ShieldCheck, Heart, Database } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setActiveView, setFilters, setShowSupabaseModal, setShowApkModal } = usePropertyContext();
+  const { setActiveView, setFilters, setShowSupabaseModal } = usePropertyContext();
 
   const handleCityClick = (city: string) => {
     setFilters((prev) => ({ ...prev, city, purpose: 'all' }));
@@ -48,14 +48,6 @@ export const Footer: React.FC = () => {
             </div>
 
             <div className="pt-2 flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowApkModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-emerald-600 shadow-xs"
-              >
-                <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Download Android APK</span>
-              </button>
-
               <button
                 onClick={() => setShowSupabaseModal(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-slate-700"
@@ -156,11 +148,13 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <button
-                  onClick={() => setShowApkModal(true)}
-                  className="hover:text-emerald-400 text-emerald-400 font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+                  onClick={() => {
+                    setActiveView('faq');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-emerald-400 transition-colors cursor-pointer"
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Download Android APK / App</span>
+                  Frequently Asked Questions (FAQ)
                 </button>
               </li>
               <li>
@@ -192,11 +186,6 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© {new Date().getFullYear()} PropertyMarkaz. Pakistan's Nationwide Real Estate Marketplace.</p>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span>Prices displayed in Pakistani Rupees (PKR)</span>
-            <span>·</span>
-            <span>Demonstration prototype for appraisal</span>
-          </div>
         </div>
       </div>
     </footer>

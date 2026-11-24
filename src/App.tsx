@@ -1,6 +1,5 @@
 import React from 'react';
 import { PropertyProvider, usePropertyContext } from './context/PropertyContext';
-import { DemoBanner } from './components/common/DemoBanner';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { MobileBottomNav } from './components/common/MobileBottomNav';
@@ -18,6 +17,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AgentProfileView } from './components/agents/AgentProfileView';
 import { AboutPage } from './components/pages/AboutPage';
 import { ContactPage } from './components/pages/ContactPage';
+import { FAQPage } from './components/pages/FAQPage';
 import { PolicyPage } from './components/pages/PolicyPage';
 
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
@@ -45,6 +45,8 @@ const AppContent: React.FC = () => {
         return <AboutPage />;
       case 'contact':
         return <ContactPage />;
+      case 'faq':
+        return <FAQPage />;
       case 'privacy':
         return <PolicyPage type="privacy" />;
       case 'terms':
@@ -56,9 +58,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-16 md:pb-0">
-      {/* Top Demo Banner */}
-      <DemoBanner />
-
       {/* Main Top Bar Navigation */}
       <Navbar />
 

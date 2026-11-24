@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Property, PropertyFilterState, UserProfile, PropertyStatus, Agent } from '../types/property';
 import { DEMO_PROPERTIES, DEMO_AGENTS } from '../data/mockProperties';
+import { isPropertyInGeofence } from '../utils/geo';
 
 interface ToastNotification {
   id: string;
@@ -19,11 +20,13 @@ export type AppView =
   | 'admin'
   | 'about'
   | 'contact'
+  | 'faq'
   | 'privacy'
   | 'terms';
 
 interface PropertyContextType {
   properties: Property[];
+  preGeofenceProperties: Property[];
   filteredProperties: Property[];
   filters: PropertyFilterState;
   setFilters: React.Dispatch<React.SetStateAction<PropertyFilterState>>;
@@ -82,6 +85,7 @@ const DEFAULT_FILTERS: PropertyFilterState = {
   areaUnit: 'Marla',
   sortBy: 'featured',
   searchQuery: '',
+  geofence: null,
 };
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -349,8 +353,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     addToast(`Logged in as Demo ${role.toUpperCase()} (${user.name})`, 'success');
   };
 
-  // Filtered properties logic
-  const filteredProperties = properties.filter((item) => {
+  // Filtered properties logic (before geofence, so map can still show nearby context pins)
+  const preGeofenceProperties = properties.filter((item) => {
     // Only approved listings visible to public unless admin view
     if (activeView !== 'admin' && item.status !== 'approved') {
       return false;
@@ -489,29 +493,34 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     return true;
-  }).sort((a, b) => {
-    switch (filters.sortBy) {
-      case 'price-asc':
-        return a.price - b.price;
-      case 'price-desc':
-        return b.price - a.price;
-      case 'date-newest':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      case 'area-desc':
-        return b.areaValue - a.areaValue;
-      case 'featured':
-      default:
-        // Featured first, then newest
-        if (a.featured && !b.featured) return -1;
-        if (!a.featured && b.featured) return 1;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }
   });
+
+  const filteredProperties = preGeofenceProperties
+    .filter((item) => isPropertyInGeofence(item, filters.geofence))
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'date-newest':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'area-desc':
+          return b.areaValue - a.areaValue;
+        case 'featured':
+        default:
+          // Featured first, then newest
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
 
   return (
     <PropertyContext.Provider
       value={{
         properties,
+        preGeofenceProperties,
         filteredProperties,
         filters,
         setFilters,

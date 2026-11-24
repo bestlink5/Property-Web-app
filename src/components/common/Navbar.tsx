@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
-import { Building2, Plus, User, Heart, ShieldCheck, Menu, X, ChevronDown, LogOut, Smartphone } from 'lucide-react';
+import { Building2, Plus, User, Heart, ShieldCheck, Menu, X, ChevronDown, LogOut } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const {
@@ -9,7 +9,6 @@ export const Navbar: React.FC = () => {
     currentUser,
     setShowAuthModal,
     setAuthModalTab,
-    setShowApkModal,
     savedPropertyIds,
     setFilters,
   } = usePropertyContext();
@@ -56,8 +55,8 @@ export const Navbar: React.FC = () => {
             </div>
           </button>
 
-          {/* Zone 2: 4-5 concise single-line text links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
+          {/* Zone 2: concise single-line text links */}
+          <nav className="hidden md:flex items-center md:gap-5 lg:gap-7 text-sm font-semibold text-slate-600">
             <button
               onClick={() => handleNavClick('buy')}
               className={`hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -85,9 +84,22 @@ export const Navbar: React.FC = () => {
                 setActiveView('contact');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className={`hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeView === 'contact' ? 'text-emerald-700 font-bold' : ''
+              }`}
             >
               Offices
+            </button>
+            <button
+              onClick={() => {
+                setActiveView('faq');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeView === 'faq' ? 'text-emerald-700 font-bold' : ''
+              }`}
+            >
+              FAQ
             </button>
             <button
               onClick={() => handleNavClick('admin')}
@@ -102,16 +114,6 @@ export const Navbar: React.FC = () => {
 
           {/* Zone 3: 1 primary action */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Android APK download action */}
-            <button
-              onClick={() => setShowApkModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer border border-emerald-200 hidden lg:flex"
-              title="Download Android APK / Install App"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Android APK</span>
-            </button>
-
             {/* Saved properties indicator */}
             <button
               onClick={() => {
@@ -245,17 +247,6 @@ export const Navbar: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {
-              setShowApkModal(true);
-              setMobileMenuOpen(false);
-            }}
-            className="w-full text-left py-2.5 px-3 rounded-lg text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-2 cursor-pointer border border-emerald-200"
-          >
-            <Smartphone className="w-4 h-4 text-emerald-700" />
-            <span>Download Android APK / App</span>
-          </button>
-
-          <button
             onClick={() => handleNavClick('sell')}
             className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
           >
@@ -285,10 +276,22 @@ export const Navbar: React.FC = () => {
             onClick={() => {
               setActiveView('contact');
               setMobileMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
           >
             Regional Offices & Contact
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('faq');
+              setMobileMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
+          >
+            Frequently Asked Questions (FAQ)
           </button>
         </div>
       )}

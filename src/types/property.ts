@@ -1,5 +1,23 @@
 export type PropertyPurpose = 'buy' | 'rent';
 
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export type GeofenceFilter =
+  | {
+      type: 'circle';
+      center: LatLng;
+      radiusKm: number;
+      label?: string;
+    }
+  | {
+      type: 'polygon';
+      points: LatLng[];
+      label?: string;
+    };
+
 export type PropertyType =
   | 'House'
   | 'Apartment'
@@ -68,6 +86,7 @@ export interface Property {
   province: Province;
   city: string;
   location: string; // Specific address / Sector / Phase
+  coordinates?: LatLng;
   developmentType?: DevelopmentType;
   developmentName?: string; // e.g. "Sector B-17", "Bahria Town Phase 8", "Model Town", "Mouza Shah Allah Ditta"
   isCustomLocation?: boolean;
@@ -112,6 +131,7 @@ export interface PropertyFilterState {
   areaUnit: AreaUnit;
   sortBy: 'featured' | 'price-asc' | 'price-desc' | 'date-newest' | 'area-desc';
   searchQuery: string;
+  geofence: GeofenceFilter | null;
 }
 
 export interface UserProfile {

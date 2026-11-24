@@ -2,11 +2,22 @@ import React, { useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { PropertyFilterBar } from '../property/PropertyFilterBar';
 import { PropertyCard } from '../property/PropertyCard';
-import { LayoutGrid, List, SearchX, RotateCcw } from 'lucide-react';
+import { PropertyMapView } from '../property/PropertyMapView';
+import { LayoutGrid, List, Map as MapIcon, SearchX, RotateCcw, X } from 'lucide-react';
 
 export const ListingPage: React.FC = () => {
-  const { filteredProperties, filters, resetFilters } = usePropertyContext();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { filteredProperties, filters, updateFilter, resetFilters } = usePropertyContext();
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
+
+  const hasActiveFilters = Boolean(
+    filters.city ||
+      filters.type ||
+      filters.area ||
+      filters.minPrice ||
+      filters.maxPrice ||
+      filters.searchQuery ||
+      filters.geofence
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -52,6 +63,18 @@ export const ListingPage: React.FC = () => {
             <List className="w-4 h-4" />
             <span className="hidden sm:inline">List</span>
           </button>
+          <button
+            onClick={() => setViewMode('map')}
+            className={`p-1.5 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+              viewMode === 'map'
+                ? 'bg-emerald-700 text-white'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Interactive Map & Geofence"
+          >
+            <MapIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Map</span>
+          </button>
         </div>
       </div>
 
@@ -59,7 +82,7 @@ export const ListingPage: React.FC = () => {
       <PropertyFilterBar />
 
       {/* Active Filter Tags */}
-      {(filters.city || filters.type || filters.minPrice || filters.maxPrice || filters.searchQuery) && (
+      {hasActiveFilters && (
         <div className="flex items-center flex-wrap gap-2 text-xs text-slate-600">
           <span className="font-semibold text-slate-700">Active Criteria:</span>
           {filters.city && (
@@ -82,6 +105,25 @@ export const ListingPage: React.FC = () => {
               Query: "{filters.searchQuery}"
             </span>
           )}
+          {filters.geofence && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 font-semibold">
+              <span>
+                Geofence:{' '}
+                {filters.geofence.label ||
+                  (filters.geofence.type === 'circle'
+                    ? `${filters.geofence.radiusKm} km radius`
+                    : 'Custom Area')}
+              </span>
+              <button
+                type="button"
+                onClick={() => updateFilter('geofence', null)}
+                className="text-emerald-700 hover:text-emerald-950 cursor-pointer"
+                aria-label="Clear geofence filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
           <button
             onClick={resetFilters}
             className="text-emerald-700 hover:underline font-semibold cursor-pointer ml-1"
@@ -91,13 +133,15 @@ export const ListingPage: React.FC = () => {
         </div>
       )}
 
-      {/* Results Count & Grid */}
-      {filteredProperties.length === 0 ? (
+      {/* Results View: Interactive Map OR Grid/List */}
+      {viewMode === 'map' ? (
+        <PropertyMapView />
+      ) : filteredProperties.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center max-w-lg mx-auto space-y-3">
           <SearchX className="w-12 h-12 text-slate-300 mx-auto" />
           <h3 className="text-base font-bold text-slate-800">No properties matched your criteria</h3>
           <p className="text-xs text-slate-500">
-            Try adjusting your budget range, changing the selected city, or resetting filters to browse all nationwide listings.
+            Try adjusting your budget range, changing the selected city, clearing your geofence area, or resetting filters to browse all nationwide listings.
           </p>
           <button
             onClick={resetFilters}
