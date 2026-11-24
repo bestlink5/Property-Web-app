@@ -15,12 +15,22 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  width: 100%;
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-sans);
   background-color: #f8fafc;
   color: #0f172a;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+#root {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Custom subtle scrollbar */

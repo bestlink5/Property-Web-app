@@ -20,7 +20,7 @@ export const ListingPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-w-0">
       {/* Page Title & Purpose Indicator */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -153,10 +153,10 @@ export const ListingPage: React.FC = () => {
         </div>
       ) : (
         <div
-          className={`grid gap-6 ${
+          className={`grid gap-6 w-full ${
             viewMode === 'grid'
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'grid-cols-1 max-w-4xl mx-auto'
+              : 'grid-cols-1 max-w-5xl mx-auto'
           }`}
         >
           {filteredProperties.map((prop) => (

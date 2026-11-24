@@ -74,7 +74,7 @@ export const ContactPage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
       {/* Header */}
       <div className="text-center space-y-3">
         <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">

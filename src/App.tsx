@@ -57,12 +57,12 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-16 md:pb-0">
+    <div className="min-h-screen w-full overflow-x-clip flex flex-col bg-slate-50 text-slate-900 pb-16 md:pb-0">
       {/* Main Top Bar Navigation */}
       <Navbar />
 
       {/* Dynamic View Content */}
-      <main className="flex-1">
+      <main className="flex-1 w-full min-w-0">
         {renderActiveView()}
       </main>
 
@@ -81,7 +81,7 @@ const AppContent: React.FC = () => {
 
       {/* Toast Notifications */}
       {notifications.length > 0 && (
-        <div className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+        <div className="fixed bottom-16 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-2 sm:max-w-sm sm:w-full pointer-events-none">
           {notifications.map((toast) => (
             <div
               key={toast.id}

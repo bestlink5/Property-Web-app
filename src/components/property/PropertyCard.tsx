@@ -32,7 +32,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
   const mainImage = property.images && property.images.length > 0 ? property.images[0] : null;
 
   return (
-    <div className="group bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
+    <div className="w-full min-w-0 group bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
       {/* Top Image Showcase */}
       <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
         {!imageError && mainImage ? (
@@ -131,10 +131,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
       </div>
 
       {/* Card Body */}
-      <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
-        <div>
+        <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
+        <div className="min-w-0">
           {/* Price Header in PKR */}
-          <div className="flex items-baseline justify-between mb-1.5">
+          <div className="flex flex-wrap items-baseline justify-between gap-1.5 mb-1.5">
             <span className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">
               {formatPKR(property.price)}
               {property.purpose === 'rent' && (

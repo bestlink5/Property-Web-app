@@ -215,7 +215,7 @@ export const AddPropertyForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Header */}
       <div className="mb-8 text-center sm:text-left">
         <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">
@@ -448,7 +448,7 @@ export const AddPropertyForm: React.FC = () => {
 
             {/* Sector / Town / Society / Private Land Selector & Custom Option */}
             <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-800">
                   Select or Enter Custom {developmentType} in {city}
                 </span>
@@ -568,7 +568,7 @@ export const AddPropertyForm: React.FC = () => {
             {/* Special Private Land & Patwar Legal Specs Panel (if Private Land or Land category) */}
             {isLandOrPrivate && (
               <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-amber-200/60">
                   <div className="flex items-center gap-2">
                     <Trees className="w-4 h-4 text-amber-800" />
                     <h3 className="text-xs font-bold text-amber-950 uppercase tracking-wide">
@@ -1033,7 +1033,7 @@ export const AddPropertyForm: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => setStep(2)}

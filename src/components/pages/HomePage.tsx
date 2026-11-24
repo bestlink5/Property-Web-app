@@ -58,18 +58,18 @@ export const HomePage: React.FC = () => {
   const recentListings = properties.filter((p) => p.status === 'approved' && !p.featured).slice(0, 3);
 
   return (
-    <div className="space-y-16 pb-12">
+    <div className="w-full space-y-12 sm:space-y-16 pb-12">
       {/* Hero Section */}
-      <section className="relative bg-slate-900 text-white overflow-hidden py-16 sm:py-24">
+      <section className="relative w-full bg-slate-900 text-white overflow-hidden py-12 sm:py-24">
         {/* Subtle geometric architectural pattern overlay */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center space-y-4 mb-8">
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
               Pakistan's Premier Real Estate Portal
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
               Find Your Dream Property in <span className="text-emerald-400">Pakistan</span>
             </h1>
             <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
@@ -306,14 +306,14 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Pakistan Land Area Converter widget */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0 w-full">
             <AreaUnitConverter initialValue={1} initialUnit="Kanal" />
           </div>
 
           {/* Trust Value Box */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+          <div className="min-w-0 w-full bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-emerald-700" />
               <h3 className="text-sm font-bold text-slate-900">PropertyMarkaz Guarantee</h3>

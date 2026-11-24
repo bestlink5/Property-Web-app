@@ -6,7 +6,7 @@ export const PolicyPage: React.FC<{ type: 'privacy' | 'terms' }> = ({ type }) =>
   const { setActiveView } = usePropertyContext();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
       {/* Back button */}
       <button
         onClick={() => setActiveView('home')}
@@ -16,7 +16,7 @@ export const PolicyPage: React.FC<{ type: 'privacy' | 'terms' }> = ({ type }) =>
         <span>Back to Home</span>
       </button>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-8 sm:p-10 shadow-xs space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-10 shadow-xs space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
           <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
             {type === 'privacy' ? <ShieldCheck className="w-5 h-5" /> : <FileText className="w-5 h-5" />}

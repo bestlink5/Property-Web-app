@@ -64,14 +64,14 @@ export const PropertyFilterBar: React.FC<PropertyFilterBarProps> = ({ compact = 
   const areasList = getCategorizedAreas();
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4 sm:p-5 space-y-4">
+    <div className="w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-xs p-3.5 sm:p-5 space-y-4">
       {/* Top Row: Purpose Switcher + Main Keyword Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
         {/* Purpose Segmented Control */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-lg shrink-0">
+        <div className="flex items-center p-1 bg-slate-100 rounded-lg w-full md:w-auto shrink-0 overflow-x-auto">
           <button
             onClick={() => updateFilter('purpose', 'all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`flex-1 md:flex-initial text-center whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               filters.purpose === 'all'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -81,7 +81,7 @@ export const PropertyFilterBar: React.FC<PropertyFilterBarProps> = ({ compact = 
           </button>
           <button
             onClick={() => updateFilter('purpose', 'buy')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`flex-1 md:flex-initial text-center whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               filters.purpose === 'buy'
                 ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -91,7 +91,7 @@ export const PropertyFilterBar: React.FC<PropertyFilterBarProps> = ({ compact = 
           </button>
           <button
             onClick={() => updateFilter('purpose', 'rent')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            className={`flex-1 md:flex-initial text-center whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               filters.purpose === 'rent'
                 ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -130,7 +130,7 @@ export const PropertyFilterBar: React.FC<PropertyFilterBarProps> = ({ compact = 
       </div>
 
       {/* Row 2: Development Classification Filter Buttons */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+      <div className="w-full min-w-0 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
           <Layers className="w-3.5 h-3.5" />
           Zone:

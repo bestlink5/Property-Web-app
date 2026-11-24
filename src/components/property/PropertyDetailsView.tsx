@@ -103,7 +103,7 @@ export const PropertyDetailsView: React.FC = () => {
     .slice(0, 3);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 min-w-0">
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
         <button
@@ -114,7 +114,7 @@ export const PropertyDetailsView: React.FC = () => {
           <span>Back to Search Results</span>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Edit Option after approval */}
           <button
             onClick={() => openEditPropertyModal(property.id)}
@@ -148,14 +148,14 @@ export const PropertyDetailsView: React.FC = () => {
       </div>
 
       {/* Main Grid: Left Gallery + Details / Right Sticky Purchase Module */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
         {/* Left Column (2 Cols on desktop): Gallery & Full Specs */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 min-w-0 w-full space-y-6">
           {/* Gallery */}
           <ImageGallery images={property.images} title={property.title} />
 
           {/* Title & Location Header */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-xs">
             <div className="flex flex-wrap items-center gap-2 mb-2 text-xs">
               <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
                 {property.purpose === 'buy' ? 'For Sale' : 'For Rent'}
@@ -365,8 +365,8 @@ export const PropertyDetailsView: React.FC = () => {
           {(property.developmentType === 'Private Land' ||
             Boolean(property.landDetails) ||
             ['Agricultural Land', 'Private Land', 'Farmhouse Land'].includes(property.type)) && (
-            <div className="bg-white rounded-xl border border-amber-200 p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-amber-100">
+            <div className="bg-white rounded-xl border border-amber-200 p-4 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-amber-100">
                 <div className="flex items-center gap-2">
                   <Trees className="w-5 h-5 text-amber-800" />
                   <div>
@@ -479,7 +479,7 @@ export const PropertyDetailsView: React.FC = () => {
         </div>
 
         {/* Right Column: Sticky Contact Module & Agent Card */}
-        <div className="space-y-6 lg:sticky lg:top-20">
+        <div className="min-w-0 w-full space-y-6 lg:sticky lg:top-20">
           {/* Price Box */}
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
             <span className="text-xs font-semibold text-slate-500 uppercase block mb-1">

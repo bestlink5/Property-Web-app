@@ -84,7 +84,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -192,7 +192,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
             <button
               key={tab}
@@ -221,7 +221,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Moderation Queue List */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {filteredList.length === 0 ? (
           <div className="py-12 text-center text-slate-500 text-xs">
             <FileCheck2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -229,8 +229,8 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-[11px] text-slate-400 mt-1">All submissions have been reviewed.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[780px] text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Ref & Property</th>

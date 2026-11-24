@@ -300,11 +300,11 @@ export const EditApprovedPropertyModal: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-200 bg-slate-50/80 px-5 pt-3 gap-2">
+        <div className="flex border-b border-slate-200 bg-slate-50/80 px-4 sm:px-5 pt-3 gap-1 sm:gap-2 overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab('price')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'price'
                 ? 'border-emerald-700 text-emerald-800 bg-white rounded-t-lg shadow-xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -317,7 +317,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('land')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'land'
                 ? 'border-emerald-700 text-emerald-800 bg-white rounded-t-lg shadow-xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -330,7 +330,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('contact')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'contact'
                 ? 'border-emerald-700 text-emerald-800 bg-white rounded-t-lg shadow-xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -347,7 +347,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
           {activeTab === 'price' && (
             <div className="space-y-4 animate-in fade-in duration-150">
               {/* Property Summary Pill */}
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex items-center justify-between text-xs">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div>
                   <span className="font-bold text-slate-800">{property.title}</span>
                   <span className="text-slate-500 block text-[11px] mt-0.5">
@@ -480,7 +480,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
               </div>
 
               {/* Price Terms: Negotiable Checkbox */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-800 block">
                     Price Negotiability
@@ -520,7 +520,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
           {/* TAB 2: LAND & AREA */}
           {activeTab === 'land' && (
             <div className="space-y-4 animate-in fade-in duration-150">
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex items-center justify-between text-xs">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div>
                   <span className="font-bold text-slate-800">Plot & Land Size Configuration</span>
                   <span className="text-slate-500 block text-[11px] mt-0.5">
@@ -806,7 +806,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Property Listed By
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => {

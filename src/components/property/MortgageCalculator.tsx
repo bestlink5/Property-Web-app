@@ -130,7 +130,7 @@ export const MortgageCalculator: React.FC<{ initialPrice?: number }> = ({
           <span className="text-[10px] text-emerald-700 block">/ month for {tenureYears} years</span>
         </div>
 
-        <div className="text-right text-xs text-slate-600">
+        <div className="text-left sm:text-right text-xs text-slate-600">
           <div>
             <span className="text-slate-500">Loan Amount: </span>
             <span className="font-semibold text-slate-900">{formatPKR(loanAmount)}</span>
