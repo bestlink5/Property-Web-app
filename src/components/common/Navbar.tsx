@@ -80,28 +80,6 @@ export const Navbar: React.FC = () => {
               Sell Property
             </button>
             <button
-              onClick={() => {
-                setActiveView('contact');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                activeView === 'contact' ? 'text-emerald-700 font-bold' : ''
-              }`}
-            >
-              Offices
-            </button>
-            <button
-              onClick={() => {
-                setActiveView('faq');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                activeView === 'faq' ? 'text-emerald-700 font-bold' : ''
-              }`}
-            >
-              FAQ
-            </button>
-            <button
               onClick={() => handleNavClick('admin')}
               className={`flex items-center gap-1 hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                 activeView === 'admin' ? 'text-emerald-700 font-bold' : ''
@@ -271,28 +249,6 @@ export const Navbar: React.FC = () => {
             className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
           >
             About PropertyMarkaz
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView('contact');
-              setMobileMenuOpen(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-          >
-            Regional Offices & Contact
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView('faq');
-              setMobileMenuOpen(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-          >
-            Frequently Asked Questions (FAQ)
           </button>
         </div>
       )}
