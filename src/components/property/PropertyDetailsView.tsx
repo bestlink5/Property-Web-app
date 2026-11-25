@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
+import { DEMO_AGENTS } from '../../data/mockProperties';
 import { formatPKR, formatFullPKR, formatArea, getWhatsAppUrl, getTelUrl } from '../../utils/formatters';
 import {
   FORM_STORAGE_KEYS,
@@ -12,6 +13,7 @@ import { ImageGallery } from './ImageGallery';
 import { AreaUnitConverter } from './AreaUnitConverter';
 import { MortgageCalculator } from './MortgageCalculator';
 import { PropertyCard } from './PropertyCard';
+import { AgentAvatarEditorModal } from '../agents/AgentAvatarEditorModal';
 import {
   MapPin,
   Bed,
@@ -38,6 +40,7 @@ import {
   Zap,
   FileText,
   Check,
+  Camera,
 } from 'lucide-react';
 
 const DEFAULT_INQUIRY_MESSAGE =
@@ -52,9 +55,12 @@ export const PropertyDetailsView: React.FC = () => {
     isPropertySaved,
     navigateToAgent,
     openEditPropertyModal,
+    updateAgentAvatar,
     addToast,
     currentUser,
   } = usePropertyContext();
+
+  const [isEditingAgentAvatar, setIsEditingAgentAvatar] = useState(false);
 
   const property = properties.find((p) => p.id === selectedPropertyId) || properties[0];
 
@@ -585,12 +591,23 @@ export const PropertyDetailsView: React.FC = () => {
           {/* Agent Profile Card */}
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
             <div className="flex items-center gap-3 mb-4">
-              <img
-                src={property.agent.avatar}
-                alt={property.agent.name}
-                referrerPolicy="no-referrer"
-                className="w-12 h-12 rounded-full object-cover border border-slate-200"
-              />
+              <div className="relative shrink-0">
+                <img
+                  src={property.agent.avatar}
+                  alt={property.agent.name}
+                  referrerPolicy="no-referrer"
+                  className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAgentAvatar(true)}
+                  aria-label="Edit agent profile picture"
+                  title="Edit agent profile picture"
+                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white border border-white flex items-center justify-center shadow-xs cursor-pointer transition-colors"
+                >
+                  <Camera className="w-2.5 h-2.5" />
+                </button>
+              </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-sm font-bold text-slate-900">{property.agent.name}</h3>
@@ -723,6 +740,16 @@ export const PropertyDetailsView: React.FC = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {isEditingAgentAvatar && (
+        <AgentAvatarEditorModal
+          agentName={property.agent.name}
+          currentAvatar={property.agent.avatar}
+          defaultAvatar={DEMO_AGENTS.find((a) => a.id === property.agent.id)?.avatar}
+          onSave={(newUrl) => updateAgentAvatar(property.agent.id, newUrl, property.agent.name)}
+          onClose={() => setIsEditingAgentAvatar(false)}
+        />
       )}
     </div>
   );

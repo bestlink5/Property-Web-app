@@ -56,6 +56,7 @@ interface PropertyContextType {
   setEditingPropertyId: (id: string | null) => void;
   openEditPropertyModal: (id: string) => void;
   agents: Agent[];
+  updateAgentAvatar: (agentId: string, avatarUrl: string, agentNameFallback?: string) => void;
   notifications: ToastNotification[];
   addToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   removeToast: (id: string) => void;
@@ -94,6 +95,7 @@ const DEFAULT_FILTERS: PropertyFilterState = {
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'propertymarkaz_listings_v1';
+const AGENTS_STORAGE_KEY = 'propertymarkaz_agents_v1';
 const SAVED_STORAGE_KEY = 'propertymarkaz_saved_v1';
 const SAVED_BY_USER_STORAGE_KEY = 'propertymarkaz_saved_by_user_v1';
 const USER_STORAGE_KEY = 'propertymarkaz_user_v1';
@@ -112,6 +114,18 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.warn('Could not read from localStorage', e);
     }
     return DEMO_PROPERTIES;
+  });
+
+  const [agents, setAgents] = useState<Agent[]>(() => {
+    try {
+      const savedAgents = localStorage.getItem(AGENTS_STORAGE_KEY);
+      if (savedAgents) {
+        return JSON.parse(savedAgents);
+      }
+    } catch {
+      // ignore
+    }
+    return DEMO_AGENTS;
   });
 
   const [savedByUser, setSavedByUser] = useState<Record<string, string[]>>(() => {
@@ -177,6 +191,15 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.warn('Storage sync error', e);
     }
   }, [properties]);
+
+  // Sync agents to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(AGENTS_STORAGE_KEY, JSON.stringify(agents));
+    } catch (e) {
+      console.warn('Agent storage sync error', e);
+    }
+  }, [agents]);
 
   // Sync per-user saved properties map to localStorage
   useEffect(() => {
@@ -380,6 +403,30 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const openEditPropertyModal = (id: string) => {
     setEditingPropertyId(id);
+  };
+
+  const updateAgentAvatar = (agentId: string, avatarUrl: string, agentNameFallback?: string) => {
+    setAgents((prev) =>
+      prev.map((ag) =>
+        ag.id === agentId || (agentNameFallback && ag.name === agentNameFallback)
+          ? { ...ag, avatar: avatarUrl }
+          : ag
+      )
+    );
+    setProperties((prev) =>
+      prev.map((prop) =>
+        prop.agent.id === agentId || (agentNameFallback && prop.agent.name === agentNameFallback)
+          ? {
+              ...prop,
+              agent: {
+                ...prop.agent,
+                avatar: avatarUrl,
+              },
+            }
+          : prop
+      )
+    );
+    addToast('Agent profile picture updated!', 'success');
   };
 
   const switchDemoRole = (role: 'guest' | 'buyer' | 'seller' | 'agent' | 'admin') => {
@@ -629,7 +676,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         editingPropertyId,
         setEditingPropertyId,
         openEditPropertyModal,
-        agents: DEMO_AGENTS,
+        agents,
+        updateAgentAvatar,
         notifications,
         addToast,
         removeToast,

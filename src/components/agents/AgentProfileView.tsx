@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
+import { DEMO_AGENTS } from '../../data/mockProperties';
 import { PropertyCard } from '../property/PropertyCard';
+import { AgentAvatarEditorModal } from './AgentAvatarEditorModal';
 import { getWhatsAppUrl, getTelUrl } from '../../utils/formatters';
 import {
   ShieldCheck,
@@ -8,16 +10,23 @@ import {
   MapPin,
   Phone,
   MessageCircle,
-  Mail,
   Award,
   ArrowLeft,
   Building,
+  Camera,
 } from 'lucide-react';
 
 export const AgentProfileView: React.FC = () => {
-  const { agents, properties, selectedAgentId, setActiveView } = usePropertyContext();
+  const { agents, properties, selectedAgentId, setActiveView, updateAgentAvatar } =
+    usePropertyContext();
+  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
 
-  const agent = agents.find((a) => a.id === selectedAgentId) || agents[0];
+  const agent =
+    agents.find((a) => a.id === selectedAgentId) ||
+    properties.find((p) => p.agent.id === selectedAgentId)?.agent ||
+    agents[0];
+
+  const defaultAvatar = DEMO_AGENTS.find((a) => a.id === agent.id)?.avatar;
 
   const agentListings = properties.filter(
     (p) => p.agent.id === agent.id || p.agent.name === agent.name
@@ -37,12 +46,33 @@ export const AgentProfileView: React.FC = () => {
       {/* Agent Bio Header Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <img
-            src={agent.avatar}
-            alt={agent.name}
-            referrerPolicy="no-referrer"
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover border-2 border-emerald-600/20 shadow-xs"
-          />
+          <div className="flex flex-col items-center gap-2 shrink-0">
+            <div className="relative group">
+              <img
+                src={agent.avatar}
+                alt={agent.name}
+                referrerPolicy="no-referrer"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover border-2 border-emerald-600/20 shadow-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setIsEditingAvatar(true)}
+                aria-label="Edit agent profile picture"
+                title="Edit profile picture"
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white border-2 border-white shadow-sm flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEditingAvatar(true)}
+              className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <Camera className="w-3 h-3" />
+              <span>Edit Photo</span>
+            </button>
+          </div>
 
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -128,6 +158,16 @@ export const AgentProfileView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {isEditingAvatar && (
+        <AgentAvatarEditorModal
+          agentName={agent.name}
+          currentAvatar={agent.avatar}
+          defaultAvatar={defaultAvatar}
+          onSave={(newUrl) => updateAgentAvatar(agent.id, newUrl, agent.name)}
+          onClose={() => setIsEditingAvatar(false)}
+        />
+      )}
     </div>
   );
 };

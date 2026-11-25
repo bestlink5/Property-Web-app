@@ -11,6 +11,7 @@ import {
 } from '../../data/locations';
 import { formatPKR, formatFullPKR, convertToSqFt } from '../../utils/formatters';
 import { FORM_STORAGE_KEYS, readStoredJson, writeStoredJson } from '../../utils/formMemory';
+import { AgentAvatarEditorModal } from '../agents/AgentAvatarEditorModal';
 import {
   X,
   Edit3,
@@ -31,6 +32,7 @@ import {
   Trees,
   Compass,
   MapPin,
+  Camera,
 } from 'lucide-react';
 
 export const EditApprovedPropertyModal: React.FC = () => {
@@ -81,6 +83,8 @@ export const EditApprovedPropertyModal: React.FC = () => {
   const [contactPhone, setContactPhone] = useState('');
   const [contactWhatsapp, setContactWhatsapp] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [contactAvatar, setContactAvatar] = useState('');
+  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [isAgentVerified, setIsAgentVerified] = useState(true);
   
   // Audit / Change Note
@@ -134,6 +138,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
     setContactPhone(saved?.contactPhone ?? property.agent?.phone ?? '');
     setContactWhatsapp(saved?.contactWhatsapp ?? property.agent?.whatsapp ?? property.agent?.phone ?? '');
     setContactEmail(saved?.contactEmail ?? property.agent?.email ?? '');
+    setContactAvatar(saved?.contactAvatar ?? property.agent?.avatar ?? '');
     setIsAgentVerified(saved?.isAgentVerified ?? property.agent?.verified ?? true);
 
     setUpdateNote(saved?.updateNote ?? '');
@@ -173,6 +178,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
       contactPhone,
       contactWhatsapp,
       contactEmail,
+      contactAvatar,
       isAgentVerified,
       updateNote,
     };
@@ -204,6 +210,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
     contactPhone,
     contactWhatsapp,
     contactEmail,
+    contactAvatar,
     isAgentVerified,
     updateNote,
   ]);
@@ -230,6 +237,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
       setContactPhone(selected.phone);
       setContactWhatsapp(selected.whatsapp);
       setContactEmail(selected.email);
+      setContactAvatar(selected.avatar);
       setIsAgentVerified(selected.verified);
       setSellerType('Agent');
       addToast(`Assigned to ${selected.name} (${selected.agency})`, 'info');
@@ -279,6 +287,7 @@ export const EditApprovedPropertyModal: React.FC = () => {
       phone: contactPhone.trim(),
       whatsapp: contactWhatsapp.trim() || contactPhone.trim(),
       email: contactEmail.trim() || property.agent.email,
+      avatar: contactAvatar.trim() || property.agent.avatar,
       verified: isAgentVerified,
     };
 
@@ -971,6 +980,34 @@ export const EditApprovedPropertyModal: React.FC = () => {
                 </div>
               )}
 
+              {/* Agent / Owner Profile Picture */}
+              <div className="flex items-center justify-between gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={contactAvatar || property.agent.avatar}
+                    alt={contactName || property.agent.name}
+                    referrerPolicy="no-referrer"
+                    className="w-12 h-12 rounded-full object-cover border border-slate-300 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <span className="block text-xs font-bold text-slate-800 truncate">
+                      Agent / Contact Profile Picture
+                    </span>
+                    <span className="block text-[11px] text-slate-500">
+                      Shown on the agent card and profile page
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAvatar(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-emerald-800 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  <Camera className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Edit Photo</span>
+                </button>
+              </div>
+
               {/* Contact Name & Agency */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -1125,6 +1162,16 @@ export const EditApprovedPropertyModal: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {isEditingAvatar && (
+        <AgentAvatarEditorModal
+          agentName={contactName || property.agent.name}
+          currentAvatar={contactAvatar || property.agent.avatar}
+          defaultAvatar={property.agent.avatar}
+          onSave={(newUrl) => setContactAvatar(newUrl)}
+          onClose={() => setIsEditingAvatar(false)}
+        />
+      )}
     </div>
   );
 };
