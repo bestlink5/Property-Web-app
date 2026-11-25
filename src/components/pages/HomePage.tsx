@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { PropertyCard } from '../property/PropertyCard';
 import { AreaUnitConverter } from '../property/AreaUnitConverter';
 import { PAKISTAN_CITIES, PROPERTY_TYPES } from '../../data/locations';
+import { FORM_STORAGE_KEYS, readStoredJson, writeStoredJson } from '../../utils/formMemory';
 import {
   Search,
   Building,
@@ -19,13 +20,34 @@ import {
   Compass,
 } from 'lucide-react';
 
+interface HeroSearchMemory {
+  purpose: 'buy' | 'rent';
+  city: string;
+  type: string;
+  keyword: string;
+}
+
 export const HomePage: React.FC = () => {
   const { properties, setFilters, setActiveView, navigateToProperty } = usePropertyContext();
 
-  const [heroPurpose, setHeroPurpose] = useState<'buy' | 'rent'>('buy');
-  const [heroCity, setHeroCity] = useState('');
-  const [heroType, setHeroType] = useState('');
-  const [heroKeyword, setHeroKeyword] = useState('');
+  const savedHeroSearch = readStoredJson<Partial<HeroSearchMemory>>(
+    FORM_STORAGE_KEYS.HERO_SEARCH_MEMORY,
+    {}
+  );
+
+  const [heroPurpose, setHeroPurpose] = useState<'buy' | 'rent'>(savedHeroSearch.purpose ?? 'buy');
+  const [heroCity, setHeroCity] = useState(savedHeroSearch.city ?? '');
+  const [heroType, setHeroType] = useState(savedHeroSearch.type ?? '');
+  const [heroKeyword, setHeroKeyword] = useState(savedHeroSearch.keyword ?? '');
+
+  useEffect(() => {
+    writeStoredJson<HeroSearchMemory>(FORM_STORAGE_KEYS.HERO_SEARCH_MEMORY, {
+      purpose: heroPurpose,
+      city: heroCity,
+      type: heroType,
+      keyword: heroKeyword,
+    });
+  }, [heroPurpose, heroCity, heroType, heroKeyword]);
 
   const handleHeroSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +86,7 @@ export const HomePage: React.FC = () => {
         {/* Subtle geometric architectural pattern overlay */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="max-w-3xl mx-auto text-center space-y-4 mb-8">
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
               Pakistan's Premier Real Estate Portal
@@ -78,7 +100,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Search Box Card */}
-          <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-6 text-slate-900 border border-slate-100">
+          <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-6 text-slate-900 border border-slate-100">
             {/* Purpose Tabs */}
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
               <button
@@ -106,9 +128,9 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Form Fields */}
-            <form onSubmit={handleHeroSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <form onSubmit={handleHeroSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
               {/* City */}
-              <div>
+              <div className="lg:col-span-3">
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                   City
                 </label>
@@ -127,7 +149,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Property Type */}
-              <div>
+              <div className="lg:col-span-3">
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                   Property Type
                 </label>
@@ -146,7 +168,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Location or Keyword */}
-              <div>
+              <div className="lg:col-span-4">
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                   Location / Society
                 </label>
@@ -160,7 +182,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Submit CTA */}
-              <div className="flex items-end">
+              <div className="lg:col-span-2 flex items-end">
                 <button
                   type="submit"
                   className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
@@ -203,7 +225,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Popular Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Explore by Category</h2>
@@ -240,7 +262,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Properties Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Featured Verified Listings</h2>
@@ -268,7 +290,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Major Pakistani Hubs Strip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="bg-slate-100/80 rounded-2xl p-6 sm:p-8 border border-slate-200">
           <div className="max-w-2xl mb-6">
             <h2 className="text-lg font-bold text-slate-900">Explore Top Real Estate Hubs</h2>
@@ -277,7 +299,7 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
             {[
               { name: 'Mirpur AJK', tagline: 'Overseas Hub & Sectors F-1, B-3' },
               { name: 'Islamabad', tagline: 'CDA Sectors, DHA & Margalla' },
@@ -306,7 +328,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Pakistan Land Area Converter widget */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2 min-w-0 w-full">
             <AreaUnitConverter initialValue={1} initialUnit="Kanal" />
@@ -338,7 +360,7 @@ export const HomePage: React.FC = () => {
 
       {/* Recent Properties Grid */}
       {recentListings.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-900">Recently Added Listings</h2>
             <p className="text-xs text-slate-500">Fresh properties submitted by owners and realtors</p>

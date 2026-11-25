@@ -15,6 +15,7 @@ export type AppView =
   | 'rent'
   | 'sell'
   | 'listings'
+  | 'saved'
   | 'details'
   | 'agent'
   | 'admin'
@@ -40,8 +41,10 @@ interface PropertyContextType {
   setSelectedAgentId: (id: string | null) => void;
   currentUser: UserProfile | null;
   setCurrentUser: (user: UserProfile | null) => void;
+  logout: () => void;
   savedPropertyIds: string[];
   toggleSaveProperty: (id: string) => void;
+  clearSavedProperties: () => void;
   isPropertySaved: (id: string) => boolean;
   addProperty: (propertyData: Omit<Property, 'id' | 'createdAt' | 'viewsCount' | 'status' | 'isDemo'>) => string;
   updateProperty: (id: string, updates: Partial<Property>, customSuccessMessage?: string) => void;
@@ -92,7 +95,11 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 
 const LOCAL_STORAGE_KEY = 'propertymarkaz_listings_v1';
 const SAVED_STORAGE_KEY = 'propertymarkaz_saved_v1';
+const SAVED_BY_USER_STORAGE_KEY = 'propertymarkaz_saved_by_user_v1';
 const USER_STORAGE_KEY = 'propertymarkaz_user_v1';
+
+const getUserSavedKey = (user: UserProfile): string =>
+  (user.email ? user.email.trim().toLowerCase() : user.id);
 
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [properties, setProperties] = useState<Property[]>(() => {
@@ -107,17 +114,28 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     return DEMO_PROPERTIES;
   });
 
-  const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>(() => {
+  const [savedByUser, setSavedByUser] = useState<Record<string, string[]>>(() => {
     try {
-      const saved = localStorage.getItem(SAVED_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      const storedMap = localStorage.getItem(SAVED_BY_USER_STORAGE_KEY);
+      if (storedMap) {
+        return JSON.parse(storedMap);
+      }
+      const legacySaved = localStorage.getItem(SAVED_STORAGE_KEY);
+      if (legacySaved) {
+        const parsed = JSON.parse(legacySaved);
+        if (Array.isArray(parsed)) {
+          return { 'ahmed.zubair@example.com': parsed };
+        }
+      }
     } catch {
       // ignore
     }
-    return ['PM-101', 'PM-103'];
+    return {
+      'ahmed.zubair@example.com': ['PM-101', 'PM-103'],
+    };
   });
 
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+  const [currentUser, setCurrentUserState] = useState<UserProfile | null>(() => {
     try {
       const saved = localStorage.getItem(USER_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
@@ -145,6 +163,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
   const [showApkModal, setShowApkModal] = useState<boolean>(false);
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [pendingSavePropertyId, setPendingSavePropertyId] = useState<string | null>(null);
+
+  const savedPropertyIds: string[] = currentUser
+    ? savedByUser[getUserSavedKey(currentUser)] ?? currentUser.savedPropertyIds ?? []
+    : [];
 
   // Sync properties to localStorage
   useEffect(() => {
@@ -155,14 +178,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [properties]);
 
-  // Sync saved to localStorage
+  // Sync per-user saved properties map to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(savedPropertyIds));
+      localStorage.setItem(SAVED_BY_USER_STORAGE_KEY, JSON.stringify(savedByUser));
     } catch {
       // ignore
     }
-  }, [savedPropertyIds]);
+  }, [savedByUser]);
 
   // Sync user
   useEffect(() => {
@@ -197,20 +220,71 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setFilters(DEFAULT_FILTERS);
   };
 
-  const toggleSaveProperty = (id: string) => {
-    setSavedPropertyIds((prev) => {
-      const exists = prev.includes(id);
-      if (exists) {
-        addToast('Removed from saved properties', 'info');
-        return prev.filter((pId) => pId !== id);
-      } else {
-        addToast('Added to saved properties', 'success');
-        return [...prev, id];
-      }
-    });
+  const setCurrentUser = (user: UserProfile | null) => {
+    if (!user) {
+      setCurrentUserState(null);
+      return;
+    }
+
+    const userKey = getUserSavedKey(user);
+    const existingSaved = savedByUser[userKey] ?? user.savedPropertyIds ?? [];
+    let nextSaved = existingSaved;
+
+    if (pendingSavePropertyId && !existingSaved.includes(pendingSavePropertyId)) {
+      nextSaved = [pendingSavePropertyId, ...existingSaved];
+      setPendingSavePropertyId(null);
+      addToast('Property bookmarked to your Saved collection!', 'success');
+    } else if (pendingSavePropertyId) {
+      setPendingSavePropertyId(null);
+    }
+
+    setSavedByUser((prev) => ({ ...prev, [userKey]: nextSaved }));
+    setCurrentUserState({ ...user, savedPropertyIds: nextSaved });
   };
 
-  const isPropertySaved = (id: string) => savedPropertyIds.includes(id);
+  const logout = () => {
+    setPendingSavePropertyId(null);
+    setCurrentUserState(null);
+    addToast('Signed out of your account.', 'info');
+  };
+
+  const toggleSaveProperty = (id: string) => {
+    if (!currentUser) {
+      setPendingSavePropertyId(id);
+      setAuthModalTab('login');
+      setShowAuthModal(true);
+      addToast('Sign in to bookmark properties in your Saved collection.', 'info');
+      return;
+    }
+
+    const userKey = getUserSavedKey(currentUser);
+    const currentList = savedByUser[userKey] ?? currentUser.savedPropertyIds ?? [];
+    const exists = currentList.includes(id);
+    const updatedList = exists
+      ? currentList.filter((pId) => pId !== id)
+      : [id, ...currentList];
+
+    setSavedByUser((prev) => ({ ...prev, [userKey]: updatedList }));
+    setCurrentUserState((prev) =>
+      prev ? { ...prev, savedPropertyIds: updatedList } : prev
+    );
+
+    if (exists) {
+      addToast('Removed from Saved properties', 'info');
+    } else {
+      addToast('Bookmarked to Saved properties', 'success');
+    }
+  };
+
+  const clearSavedProperties = () => {
+    if (!currentUser) return;
+    const userKey = getUserSavedKey(currentUser);
+    setSavedByUser((prev) => ({ ...prev, [userKey]: [] }));
+    setCurrentUserState((prev) => (prev ? { ...prev, savedPropertyIds: [] } : prev));
+    addToast('Cleared all saved properties from your collection.', 'info');
+  };
+
+  const isPropertySaved = (id: string) => Boolean(currentUser && savedPropertyIds.includes(id));
 
   const navigateToProperty = (id: string) => {
     setSelectedPropertyId(id);
@@ -258,6 +332,13 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const deleteProperty = (id: string) => {
     setProperties((prev) => prev.filter((p) => p.id !== id));
+    setSavedByUser((prev) => {
+      const next: Record<string, string[]> = {};
+      for (const [k, ids] of Object.entries(prev)) {
+        next[k] = ids.filter((pId) => pId !== id);
+      }
+      return next;
+    });
     addToast(`Property ${id} deleted`, 'info');
   };
 
@@ -534,8 +615,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         setSelectedAgentId,
         currentUser,
         setCurrentUser,
+        logout,
         savedPropertyIds,
         toggleSaveProperty,
+        clearSavedProperties,
         isPropertySaved,
         addProperty,
         updateProperty,

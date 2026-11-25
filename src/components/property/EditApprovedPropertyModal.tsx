@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { AreaUnit, DevelopmentType, LandDetails, Property } from '../../types/property';
 import {
@@ -10,6 +10,7 @@ import {
   LAND_ELECTRICITY_OPTIONS,
 } from '../../data/locations';
 import { formatPKR, formatFullPKR, convertToSqFt } from '../../utils/formatters';
+import { FORM_STORAGE_KEYS, readStoredJson, writeStoredJson } from '../../utils/formMemory';
 import {
   X,
   Edit3,
@@ -86,43 +87,126 @@ export const EditApprovedPropertyModal: React.FC = () => {
   const [updateNote, setUpdateNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form state whenever property changes
+  const hydratedPropertyIdRef = useRef<string | null>(null);
+
+  // Initialize form state whenever property changes (restoring saved unsaved-edit draft if present)
   useEffect(() => {
-    if (property) {
-      setPrice(property.price || 0);
-      setPriceNegotiable(property.priceNegotiable !== false);
-      setPurpose(property.purpose || 'buy');
-      
-      setAreaValue(property.areaValue || 0);
-      setAreaUnit(property.areaUnit || 'Marla');
-      setCoveredAreaSqFt(property.coveredAreaSqFt);
-
-      setDevelopmentType(property.developmentType || 'Sector');
-      setDevelopmentName(property.developmentName || '');
-      setLocationStr(property.location || '');
-
-      setMouzaName(property.landDetails?.mouzaName || '');
-      setKhasraNumber(property.landDetails?.khasraNumber || '');
-      setTitleType(property.landDetails?.titleType || 'Registry & Inteqal');
-      setPossessionStatus(property.landDetails?.possessionStatus || 'Immediate Physical Possession');
-      setRoadFrontageFt(property.landDetails?.roadFrontageFt ?? '');
-      setRoadWidthFt(property.landDetails?.roadWidthFt ?? '');
-      setRoadAccessType(property.landDetails?.roadAccessType || 'Link Road (Paved)');
-      setWaterSource(property.landDetails?.waterSource || 'Tube Well Installed');
-      setElectricityStatus(property.landDetails?.electricityStatus || 'Transformer Installed / 3-Phase');
-      
-      setSellerType(property.sellerType || 'Agent');
-      setContactName(property.agent?.name || '');
-      setAgencyName(property.agent?.agency || '');
-      setContactPhone(property.agent?.phone || '');
-      setContactWhatsapp(property.agent?.whatsapp || property.agent?.phone || '');
-      setContactEmail(property.agent?.email || '');
-      setIsAgentVerified(property.agent?.verified ?? true);
-      
-      setUpdateNote('');
-      setActiveTab('price');
+    if (!property) {
+      hydratedPropertyIdRef.current = null;
+      return;
     }
+
+    const drafts = readStoredJson<Record<string, Record<string, unknown>>>(
+      FORM_STORAGE_KEYS.EDIT_PROPERTY_DRAFTS,
+      {}
+    );
+    const saved = drafts[property.id] as Record<string, any> | undefined;
+
+    setPrice(saved?.price ?? property.price ?? 0);
+    setPriceNegotiable(saved?.priceNegotiable ?? property.priceNegotiable !== false);
+    setPurpose(saved?.purpose ?? property.purpose ?? 'buy');
+
+    setAreaValue(saved?.areaValue ?? property.areaValue ?? 0);
+    setAreaUnit(saved?.areaUnit ?? property.areaUnit ?? 'Marla');
+    setCoveredAreaSqFt(saved?.coveredAreaSqFt ?? property.coveredAreaSqFt);
+
+    setDevelopmentType(saved?.developmentType ?? property.developmentType ?? 'Sector');
+    setDevelopmentName(saved?.developmentName ?? property.developmentName ?? '');
+    setLocationStr(saved?.locationStr ?? property.location ?? '');
+
+    setMouzaName(saved?.mouzaName ?? property.landDetails?.mouzaName ?? '');
+    setKhasraNumber(saved?.khasraNumber ?? property.landDetails?.khasraNumber ?? '');
+    setTitleType(saved?.titleType ?? property.landDetails?.titleType ?? 'Registry & Inteqal');
+    setPossessionStatus(
+      saved?.possessionStatus ?? property.landDetails?.possessionStatus ?? 'Immediate Physical Possession'
+    );
+    setRoadFrontageFt(saved?.roadFrontageFt ?? property.landDetails?.roadFrontageFt ?? '');
+    setRoadWidthFt(saved?.roadWidthFt ?? property.landDetails?.roadWidthFt ?? '');
+    setRoadAccessType(saved?.roadAccessType ?? property.landDetails?.roadAccessType ?? 'Link Road (Paved)');
+    setWaterSource(saved?.waterSource ?? property.landDetails?.waterSource ?? 'Tube Well Installed');
+    setElectricityStatus(
+      saved?.electricityStatus ?? property.landDetails?.electricityStatus ?? 'Transformer Installed / 3-Phase'
+    );
+
+    setSellerType(saved?.sellerType ?? property.sellerType ?? 'Agent');
+    setContactName(saved?.contactName ?? property.agent?.name ?? '');
+    setAgencyName(saved?.agencyName ?? property.agent?.agency ?? '');
+    setContactPhone(saved?.contactPhone ?? property.agent?.phone ?? '');
+    setContactWhatsapp(saved?.contactWhatsapp ?? property.agent?.whatsapp ?? property.agent?.phone ?? '');
+    setContactEmail(saved?.contactEmail ?? property.agent?.email ?? '');
+    setIsAgentVerified(saved?.isAgentVerified ?? property.agent?.verified ?? true);
+
+    setUpdateNote(saved?.updateNote ?? '');
+    setActiveTab(saved?.activeTab ?? 'price');
+    hydratedPropertyIdRef.current = property.id;
   }, [property]);
+
+  useEffect(() => {
+    if (!property || hydratedPropertyIdRef.current !== property.id) return;
+    const drafts = readStoredJson<Record<string, Record<string, unknown>>>(
+      FORM_STORAGE_KEYS.EDIT_PROPERTY_DRAFTS,
+      {}
+    );
+    drafts[property.id] = {
+      activeTab,
+      price,
+      priceNegotiable,
+      purpose,
+      areaValue,
+      areaUnit,
+      coveredAreaSqFt,
+      developmentType,
+      developmentName,
+      locationStr,
+      mouzaName,
+      khasraNumber,
+      titleType,
+      possessionStatus,
+      roadFrontageFt,
+      roadWidthFt,
+      roadAccessType,
+      waterSource,
+      electricityStatus,
+      sellerType,
+      contactName,
+      agencyName,
+      contactPhone,
+      contactWhatsapp,
+      contactEmail,
+      isAgentVerified,
+      updateNote,
+    };
+    writeStoredJson(FORM_STORAGE_KEYS.EDIT_PROPERTY_DRAFTS, drafts);
+  }, [
+    property,
+    activeTab,
+    price,
+    priceNegotiable,
+    purpose,
+    areaValue,
+    areaUnit,
+    coveredAreaSqFt,
+    developmentType,
+    developmentName,
+    locationStr,
+    mouzaName,
+    khasraNumber,
+    titleType,
+    possessionStatus,
+    roadFrontageFt,
+    roadWidthFt,
+    roadAccessType,
+    waterSource,
+    electricityStatus,
+    sellerType,
+    contactName,
+    agencyName,
+    contactPhone,
+    contactWhatsapp,
+    contactEmail,
+    isAgentVerified,
+    updateNote,
+  ]);
 
   if (!editingPropertyId || !property) {
     return null;
@@ -242,6 +326,13 @@ export const EditApprovedPropertyModal: React.FC = () => {
       updates,
       `Property ${property.id} updated: Price, Land, Sector/Town & Contact saved successfully!`
     );
+
+    const drafts = readStoredJson<Record<string, Record<string, unknown>>>(
+      FORM_STORAGE_KEYS.EDIT_PROPERTY_DRAFTS,
+      {}
+    );
+    delete drafts[property.id];
+    writeStoredJson(FORM_STORAGE_KEYS.EDIT_PROPERTY_DRAFTS, drafts);
 
     setIsSubmitting(false);
     handleClose();

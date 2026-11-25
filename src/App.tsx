@@ -10,6 +10,7 @@ import { AuthModal } from './components/auth/AuthModal';
 
 import { HomePage } from './components/pages/HomePage';
 import { ListingPage } from './components/pages/ListingPage';
+import { SavedPropertiesView } from './components/pages/SavedPropertiesView';
 import { PropertyDetailsView } from './components/property/PropertyDetailsView';
 import { EditApprovedPropertyModal } from './components/property/EditApprovedPropertyModal';
 import { AddPropertyForm } from './components/forms/AddPropertyForm';
@@ -33,6 +34,8 @@ const AppContent: React.FC = () => {
       case 'buy':
       case 'rent':
         return <ListingPage />;
+      case 'saved':
+        return <SavedPropertiesView />;
       case 'details':
         return <PropertyDetailsView />;
       case 'sell':

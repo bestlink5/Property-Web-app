@@ -1,17 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
+import {
+  FORM_STORAGE_KEYS,
+  getRememberedContact,
+  readStoredJson,
+  saveRememberedContact,
+  writeStoredJson,
+} from '../../utils/formMemory';
 import { MapPin, Phone, Mail, MessageCircle, Send, CheckCircle2, Building, ChevronDown, ChevronUp } from 'lucide-react';
 
-export const ContactPage: React.FC = () => {
-  const { addToast } = usePropertyContext();
+interface ContactDraft {
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  message: string;
+}
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('Islamabad');
-  const [message, setMessage] = useState('');
+export const ContactPage: React.FC = () => {
+  const { addToast, currentUser } = usePropertyContext();
+
+  const initialDraft = readStoredJson<Partial<ContactDraft>>(FORM_STORAGE_KEYS.CONTACT_PAGE_DRAFT, {});
+  const rememberedContact = getRememberedContact();
+
+  const [name, setName] = useState(
+    initialDraft.name ?? rememberedContact.name ?? currentUser?.name ?? ''
+  );
+  const [email, setEmail] = useState(
+    initialDraft.email ?? rememberedContact.email ?? currentUser?.email ?? ''
+  );
+  const [phone, setPhone] = useState(
+    initialDraft.phone ?? rememberedContact.phone ?? currentUser?.phone ?? ''
+  );
+  const [city, setCity] = useState(
+    initialDraft.city ?? rememberedContact.city ?? currentUser?.city ?? 'Islamabad'
+  );
+  const [message, setMessage] = useState(initialDraft.message ?? '');
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    writeStoredJson<ContactDraft>(FORM_STORAGE_KEYS.CONTACT_PAGE_DRAFT, {
+      name,
+      email,
+      phone,
+      city,
+      message,
+    });
+  }, [name, email, phone, city, message]);
+
+  useEffect(() => {
+    if (name.trim() || email.trim() || phone.trim()) {
+      saveRememberedContact({ name, email, phone, city });
+    }
+  }, [name, email, phone, city]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +61,15 @@ export const ContactPage: React.FC = () => {
       addToast('Please fill in required fields.', 'error');
       return;
     }
+    saveRememberedContact({ name, email, phone, city });
+    setMessage('');
+    writeStoredJson<ContactDraft>(FORM_STORAGE_KEYS.CONTACT_PAGE_DRAFT, {
+      name,
+      email,
+      phone,
+      city,
+      message: '',
+    });
     setSubmitted(true);
     addToast('Your inquiry has been submitted! Our team will contact you within 24 hours.', 'success');
   };
@@ -74,7 +125,7 @@ export const ContactPage: React.FC = () => {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12 space-y-10 sm:space-y-12">
       {/* Header */}
       <div className="text-center space-y-3">
         <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">

@@ -7,6 +7,7 @@ export const Navbar: React.FC = () => {
     activeView,
     setActiveView,
     currentUser,
+    logout,
     setShowAuthModal,
     setAuthModalTab,
     savedPropertyIds,
@@ -34,7 +35,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10">
         {/* Strictly compliant 3-zone Top Bar Contract */}
         <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-8 h-16">
           {/* Zone 1: Single text wordmark & architectural emblem */}
@@ -79,15 +80,6 @@ export const Navbar: React.FC = () => {
             >
               Sell Property
             </button>
-            <button
-              onClick={() => handleNavClick('admin')}
-              className={`flex items-center gap-1 hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                activeView === 'admin' ? 'text-emerald-700 font-bold' : ''
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Portal</span>
-            </button>
           </nav>
 
           {/* Zone 3: 1 primary action */}
@@ -95,14 +87,19 @@ export const Navbar: React.FC = () => {
             {/* Saved properties indicator */}
             <button
               onClick={() => {
-                setActiveView('listings');
+                setActiveView('saved');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="relative p-2 text-slate-500 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100 cursor-pointer hidden sm:flex items-center justify-center"
+              className={`relative p-2 transition-colors rounded-lg cursor-pointer hidden sm:flex items-center justify-center ${
+                activeView === 'saved'
+                  ? 'bg-rose-50 text-rose-600'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+              }`}
               title="Saved Properties"
+              aria-label="Saved Properties"
             >
-              <Heart className="w-5 h-5" />
-              {savedPropertyIds.length > 0 && (
+              <Heart className={`w-5 h-5 ${activeView === 'saved' ? 'fill-rose-500 text-rose-500' : ''}`} />
+              {currentUser && savedPropertyIds.length > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white rounded-full text-[10px] font-bold flex items-center justify-center">
                   {savedPropertyIds.length}
                 </span>
@@ -139,6 +136,25 @@ export const Navbar: React.FC = () => {
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
+                        setActiveView('saved');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between gap-2 cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Heart className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Saved Properties</span>
+                      </span>
+                      {savedPropertyIds.length > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                          {savedPropertyIds.length}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
                         setActiveView('sell');
                       }}
                       className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
@@ -169,6 +185,17 @@ export const Navbar: React.FC = () => {
                     >
                       <User className="w-3.5 h-3.5" />
                       Switch Account / Role
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-rose-50 text-rose-700 flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out
                     </button>
                   </div>
                 )}
@@ -239,6 +266,25 @@ export const Navbar: React.FC = () => {
           >
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>Admin Review & Approval Console</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('saved');
+              setMobileMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center justify-between gap-2 cursor-pointer"
+          >
+            <span className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-rose-500" />
+              <span>Saved Properties</span>
+            </span>
+            {currentUser && savedPropertyIds.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                {savedPropertyIds.length}
+              </span>
+            )}
           </button>
 
           <button

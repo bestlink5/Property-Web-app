@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import {
   PAKISTAN_CITIES,
@@ -15,6 +15,14 @@ import {
 import { AreaUnit, DevelopmentType, LandDetails, PropertyPurpose, PropertyType, Province } from '../../types/property';
 import { formatPKR } from '../../utils/formatters';
 import {
+  FORM_STORAGE_KEYS,
+  getRememberedContact,
+  readStoredJson,
+  removeStoredKey,
+  saveRememberedContact,
+  writeStoredJson,
+} from '../../utils/formMemory';
+import {
   Plus,
   Check,
   ArrowRight,
@@ -30,6 +38,7 @@ import {
   FileCheck,
   Droplets,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { PropertyImageUploader } from './PropertyImageUploader';
 
@@ -48,68 +57,310 @@ const COMMON_AMENITIES = [
   'Covered Car Parking',
 ];
 
-export const AddPropertyForm: React.FC = () => {
-  const { addProperty, currentUser, setActiveView, navigateToProperty, addToast } = usePropertyContext();
+const DEFAULT_IMAGES = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200&auto=format&fit=crop&q=80',
+];
 
-  const [step, setStep] = useState<number>(1);
+const DEFAULT_FEATURES = [
+  'Electricity 24/7',
+  'Sui Gas Connected',
+  'Gated Community Security',
+];
+
+interface AddPropertyDraft {
+  step: number;
+  purpose: PropertyPurpose;
+  propertyType: PropertyType;
+  title: string;
+  description: string;
+  province: Province;
+  city: string;
+  developmentType: DevelopmentType;
+  selectedAreaPreset: string;
+  isCustomLocation: boolean;
+  customDevelopmentName: string;
+  subLocation: string;
+  location: string;
+  landClassification: string;
+  mouzaName: string;
+  khasraNumber: string;
+  titleType: string;
+  possessionStatus: string;
+  roadFrontageFt: number | '';
+  roadWidthFt: number | '';
+  roadAccessType: string;
+  waterSource: string;
+  electricityStatus: string;
+  price: number;
+  areaValue: number;
+  areaUnit: AreaUnit;
+  coveredAreaSqFt: number;
+  bedrooms: number;
+  bathrooms: number;
+  parkingSpaces: number;
+  yearBuilt: number;
+  furnishing: 'Unfurnished' | 'Semi-Furnished' | 'Fully Furnished';
+  selectedFeatures: string[];
+  sellerType: 'Owner' | 'Agent' | 'Builder';
+  contactName: string;
+  contactPhone: string;
+  contactWhatsapp: string;
+  images: string[];
+  updatedAt?: string;
+}
+
+export const AddPropertyForm: React.FC = () => {
+  const { addProperty, currentUser, setActiveView, addToast } = usePropertyContext();
+
+  const initialDraft = readStoredJson<Partial<AddPropertyDraft> | null>(
+    FORM_STORAGE_KEYS.ADD_PROPERTY_DRAFT,
+    null
+  );
+  const rememberedContact = getRememberedContact();
+
+  const [step, setStep] = useState<number>(initialDraft?.step ?? 1);
+  const [hasSavedDraft, setHasSavedDraft] = useState<boolean>(Boolean(initialDraft));
 
   // Form State
-  const [purpose, setPurpose] = useState<PropertyPurpose>('buy');
-  const [propertyType, setPropertyType] = useState<PropertyType>('House');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [purpose, setPurpose] = useState<PropertyPurpose>(initialDraft?.purpose ?? 'buy');
+  const [propertyType, setPropertyType] = useState<PropertyType>(initialDraft?.propertyType ?? 'House');
+  const [title, setTitle] = useState(initialDraft?.title ?? '');
+  const [description, setDescription] = useState(initialDraft?.description ?? '');
 
   // Location & Development Hierarchy
-  const [province, setProvince] = useState<Province>('Islamabad Capital Territory');
-  const [city, setCity] = useState('Islamabad');
-  const [developmentType, setDevelopmentType] = useState<DevelopmentType>('Sector');
-  const [selectedAreaPreset, setSelectedAreaPreset] = useState<string>('Sector F-7');
-  const [isCustomLocation, setIsCustomLocation] = useState<boolean>(false);
-  const [customDevelopmentName, setCustomDevelopmentName] = useState<string>('');
-  const [subLocation, setSubLocation] = useState<string>('Street 34');
-  const [location, setLocation] = useState('Sector F-7, Street 34, Islamabad');
+  const [province, setProvince] = useState<Province>(
+    initialDraft?.province ?? 'Islamabad Capital Territory'
+  );
+  const [city, setCity] = useState(initialDraft?.city ?? 'Islamabad');
+  const [developmentType, setDevelopmentType] = useState<DevelopmentType>(
+    initialDraft?.developmentType ?? 'Sector'
+  );
+  const [selectedAreaPreset, setSelectedAreaPreset] = useState<string>(
+    initialDraft?.selectedAreaPreset ?? 'Sector F-7'
+  );
+  const [isCustomLocation, setIsCustomLocation] = useState<boolean>(
+    initialDraft?.isCustomLocation ?? false
+  );
+  const [customDevelopmentName, setCustomDevelopmentName] = useState<string>(
+    initialDraft?.customDevelopmentName ?? ''
+  );
+  const [subLocation, setSubLocation] = useState<string>(initialDraft?.subLocation ?? 'Street 34');
+  const [location, setLocation] = useState(
+    initialDraft?.location ?? 'Sector F-7, Street 34, Islamabad'
+  );
 
   // Private Land & Revenue Patwar Specifications
-  const [landClassification, setLandClassification] = useState<string>('Agricultural');
-  const [mouzaName, setMouzaName] = useState<string>('');
-  const [khasraNumber, setKhasraNumber] = useState<string>('');
-  const [titleType, setTitleType] = useState<string>('Registry & Inteqal');
-  const [possessionStatus, setPossessionStatus] = useState<string>('Immediate Physical Possession');
-  const [roadFrontageFt, setRoadFrontageFt] = useState<number | ''>(100);
-  const [roadWidthFt, setRoadWidthFt] = useState<number | ''>(40);
-  const [roadAccessType, setRoadAccessType] = useState<string>('Link Road (Paved)');
-  const [waterSource, setWaterSource] = useState<string>('Tube Well Installed');
-  const [electricityStatus, setElectricityStatus] = useState<string>('Transformer Installed / 3-Phase');
+  const [landClassification, setLandClassification] = useState<string>(
+    initialDraft?.landClassification ?? 'Agricultural'
+  );
+  const [mouzaName, setMouzaName] = useState<string>(initialDraft?.mouzaName ?? '');
+  const [khasraNumber, setKhasraNumber] = useState<string>(initialDraft?.khasraNumber ?? '');
+  const [titleType, setTitleType] = useState<string>(
+    initialDraft?.titleType ?? 'Registry & Inteqal'
+  );
+  const [possessionStatus, setPossessionStatus] = useState<string>(
+    initialDraft?.possessionStatus ?? 'Immediate Physical Possession'
+  );
+  const [roadFrontageFt, setRoadFrontageFt] = useState<number | ''>(
+    initialDraft?.roadFrontageFt ?? 100
+  );
+  const [roadWidthFt, setRoadWidthFt] = useState<number | ''>(initialDraft?.roadWidthFt ?? 40);
+  const [roadAccessType, setRoadAccessType] = useState<string>(
+    initialDraft?.roadAccessType ?? 'Link Road (Paved)'
+  );
+  const [waterSource, setWaterSource] = useState<string>(
+    initialDraft?.waterSource ?? 'Tube Well Installed'
+  );
+  const [electricityStatus, setElectricityStatus] = useState<string>(
+    initialDraft?.electricityStatus ?? 'Transformer Installed / 3-Phase'
+  );
 
   // Price & Area
-  const [price, setPrice] = useState<number>(25000000); // 2.5 Crore default
-  const [areaValue, setAreaValue] = useState<number>(10);
-  const [areaUnit, setAreaUnit] = useState<AreaUnit>('Marla');
-  const [coveredAreaSqFt, setCoveredAreaSqFt] = useState<number>(2800);
+  const [price, setPrice] = useState<number>(initialDraft?.price ?? 25000000); // 2.5 Crore default
+  const [areaValue, setAreaValue] = useState<number>(initialDraft?.areaValue ?? 10);
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>(initialDraft?.areaUnit ?? 'Marla');
+  const [coveredAreaSqFt, setCoveredAreaSqFt] = useState<number>(
+    initialDraft?.coveredAreaSqFt ?? 2800
+  );
 
   // Specifications
-  const [bedrooms, setBedrooms] = useState<number>(4);
-  const [bathrooms, setBathrooms] = useState<number>(4);
-  const [parkingSpaces, setParkingSpaces] = useState<number>(2);
-  const [yearBuilt, setYearBuilt] = useState<number>(2025);
-  const [furnishing, setFurnishing] = useState<'Unfurnished' | 'Semi-Furnished' | 'Fully Furnished'>('Unfurnished');
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([
-    'Electricity 24/7',
-    'Sui Gas Connected',
-    'Gated Community Security',
-  ]);
+  const [bedrooms, setBedrooms] = useState<number>(initialDraft?.bedrooms ?? 4);
+  const [bathrooms, setBathrooms] = useState<number>(initialDraft?.bathrooms ?? 4);
+  const [parkingSpaces, setParkingSpaces] = useState<number>(initialDraft?.parkingSpaces ?? 2);
+  const [yearBuilt, setYearBuilt] = useState<number>(initialDraft?.yearBuilt ?? 2025);
+  const [furnishing, setFurnishing] = useState<'Unfurnished' | 'Semi-Furnished' | 'Fully Furnished'>(
+    initialDraft?.furnishing ?? 'Unfurnished'
+  );
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
+    initialDraft?.selectedFeatures ?? DEFAULT_FEATURES
+  );
 
   // Contact & Seller Info
-  const [sellerType, setSellerType] = useState<'Owner' | 'Agent' | 'Builder'>('Owner');
-  const [contactName, setContactName] = useState(currentUser?.name || 'Chaudhry Adnan');
-  const [contactPhone, setContactPhone] = useState(currentUser?.phone || '+92 300 7654321');
-  const [contactWhatsapp, setContactWhatsapp] = useState(currentUser?.phone || '+92 300 7654321');
+  const [sellerType, setSellerType] = useState<'Owner' | 'Agent' | 'Builder'>(
+    initialDraft?.sellerType ?? rememberedContact.sellerType ?? 'Owner'
+  );
+  const [contactName, setContactName] = useState(
+    initialDraft?.contactName ?? rememberedContact.name ?? currentUser?.name ?? 'Chaudhry Adnan'
+  );
+  const [contactPhone, setContactPhone] = useState(
+    initialDraft?.contactPhone ?? rememberedContact.phone ?? currentUser?.phone ?? '+92 300 7654321'
+  );
+  const [contactWhatsapp, setContactWhatsapp] = useState(
+    initialDraft?.contactWhatsapp ??
+      rememberedContact.whatsapp ??
+      rememberedContact.phone ??
+      currentUser?.phone ??
+      '+92 300 7654321'
+  );
 
   // Images state (simulated file upload with sample property images)
-  const [images, setImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200&auto=format&fit=crop&q=80',
+  const [images, setImages] = useState<string[]>(initialDraft?.images ?? DEFAULT_IMAGES);
+
+  useEffect(() => {
+    const draftPayload: AddPropertyDraft = {
+      step,
+      purpose,
+      propertyType,
+      title,
+      description,
+      province,
+      city,
+      developmentType,
+      selectedAreaPreset,
+      isCustomLocation,
+      customDevelopmentName,
+      subLocation,
+      location,
+      landClassification,
+      mouzaName,
+      khasraNumber,
+      titleType,
+      possessionStatus,
+      roadFrontageFt,
+      roadWidthFt,
+      roadAccessType,
+      waterSource,
+      electricityStatus,
+      price,
+      areaValue,
+      areaUnit,
+      coveredAreaSqFt,
+      bedrooms,
+      bathrooms,
+      parkingSpaces,
+      yearBuilt,
+      furnishing,
+      selectedFeatures,
+      sellerType,
+      contactName,
+      contactPhone,
+      contactWhatsapp,
+      images,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const saved = writeStoredJson(FORM_STORAGE_KEYS.ADD_PROPERTY_DRAFT, draftPayload);
+    if (!saved) {
+      // If oversized data-URL images exceed localStorage quota, keep URL images and all text fields
+      const lightweightImages = images.filter((img) => !img.startsWith('data:'));
+      writeStoredJson(FORM_STORAGE_KEYS.ADD_PROPERTY_DRAFT, {
+        ...draftPayload,
+        images: lightweightImages.length > 0 ? lightweightImages : DEFAULT_IMAGES,
+      });
+    }
+    setHasSavedDraft(true);
+  }, [
+    step,
+    purpose,
+    propertyType,
+    title,
+    description,
+    province,
+    city,
+    developmentType,
+    selectedAreaPreset,
+    isCustomLocation,
+    customDevelopmentName,
+    subLocation,
+    location,
+    landClassification,
+    mouzaName,
+    khasraNumber,
+    titleType,
+    possessionStatus,
+    roadFrontageFt,
+    roadWidthFt,
+    roadAccessType,
+    waterSource,
+    electricityStatus,
+    price,
+    areaValue,
+    areaUnit,
+    coveredAreaSqFt,
+    bedrooms,
+    bathrooms,
+    parkingSpaces,
+    yearBuilt,
+    furnishing,
+    selectedFeatures,
+    sellerType,
+    contactName,
+    contactPhone,
+    contactWhatsapp,
+    images,
   ]);
+
+  useEffect(() => {
+    if (contactName.trim() || contactPhone.trim() || contactWhatsapp.trim()) {
+      saveRememberedContact({
+        name: contactName,
+        phone: contactPhone,
+        whatsapp: contactWhatsapp,
+        sellerType,
+      });
+    }
+  }, [contactName, contactPhone, contactWhatsapp, sellerType]);
+
+  const handleResetDraft = () => {
+    removeStoredKey(FORM_STORAGE_KEYS.ADD_PROPERTY_DRAFT);
+    setStep(1);
+    setPurpose('buy');
+    setPropertyType('House');
+    setTitle('');
+    setDescription('');
+    setProvince('Islamabad Capital Territory');
+    setCity('Islamabad');
+    setDevelopmentType('Sector');
+    setSelectedAreaPreset('Sector F-7');
+    setIsCustomLocation(false);
+    setCustomDevelopmentName('');
+    setSubLocation('Street 34');
+    setLocation('Sector F-7, Street 34, Islamabad');
+    setLandClassification('Agricultural');
+    setMouzaName('');
+    setKhasraNumber('');
+    setTitleType('Registry & Inteqal');
+    setPossessionStatus('Immediate Physical Possession');
+    setRoadFrontageFt(100);
+    setRoadWidthFt(40);
+    setRoadAccessType('Link Road (Paved)');
+    setWaterSource('Tube Well Installed');
+    setElectricityStatus('Transformer Installed / 3-Phase');
+    setPrice(25000000);
+    setAreaValue(10);
+    setAreaUnit('Marla');
+    setCoveredAreaSqFt(2800);
+    setBedrooms(4);
+    setBathrooms(4);
+    setParkingSpaces(2);
+    setYearBuilt(2025);
+    setFurnishing('Unfurnished');
+    setSelectedFeatures(DEFAULT_FEATURES);
+    setImages(DEFAULT_IMAGES);
+    setHasSavedDraft(false);
+    addToast('Property form reset to defaults.', 'info');
+  };
 
   const toggleFeature = (feat: string) => {
     setSelectedFeatures((prev) =>
@@ -210,6 +461,14 @@ export const AddPropertyForm: React.FC = () => {
       sellerType,
     });
 
+    saveRememberedContact({
+      name: contactName,
+      phone: contactPhone,
+      whatsapp: contactWhatsapp,
+      sellerType,
+    });
+    removeStoredKey(FORM_STORAGE_KEYS.ADD_PROPERTY_DRAFT);
+
     // Navigate to admin portal to view pending queue
     setActiveView('admin');
   };
@@ -217,16 +476,36 @@ export const AddPropertyForm: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-8 text-center sm:text-left">
-        <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">
-          Property Submission Portal
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-          List Your Property in Pakistan
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Reach genuine buyers & tenants across Islamabad, Lahore, Karachi, Rawalpindi, Mirpur AJK, and overseas.
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-center sm:text-left">
+        <div>
+          <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-1">
+            Property Submission Portal
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            List Your Property in Pakistan
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Reach genuine buyers & tenants across Islamabad, Lahore, Karachi, Rawalpindi, Mirpur AJK, and overseas.
+          </p>
+        </div>
+
+        {hasSavedDraft && (
+          <div className="inline-flex items-center justify-center sm:justify-end gap-2 self-center sm:self-auto shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-800">
+              <Check className="w-3 h-3" />
+              Form auto-saved
+            </span>
+            <button
+              type="button"
+              onClick={handleResetDraft}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              title="Clear saved draft and reset form fields"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stepper Indicators */}

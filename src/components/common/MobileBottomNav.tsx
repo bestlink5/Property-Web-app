@@ -56,18 +56,18 @@ export const MobileBottomNav: React.FC = () => {
 
       <button
         onClick={() => {
-          setActiveView('listings');
+          setActiveView('saved');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium relative transition-colors ${
-          savedPropertyIds.length > 0 && activeView === 'listings'
+        className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-medium relative transition-colors cursor-pointer ${
+          activeView === 'saved'
             ? 'text-emerald-700 font-bold'
             : 'text-slate-500 hover:text-slate-900'
         }`}
       >
-        <Heart className="w-4 h-4 mb-0.5" />
+        <Heart className={`w-4 h-4 mb-0.5 ${activeView === 'saved' ? 'fill-rose-500 text-rose-500' : ''}`} />
         <span>Saved</span>
-        {savedPropertyIds.length > 0 && (
+        {currentUser && savedPropertyIds.length > 0 && (
           <span className="absolute top-1 right-5 w-3.5 h-3.5 bg-emerald-600 text-white rounded-full text-[9px] flex items-center justify-center font-bold">
             {savedPropertyIds.length}
           </span>

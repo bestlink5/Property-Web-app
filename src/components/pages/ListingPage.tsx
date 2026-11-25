@@ -3,11 +3,12 @@ import { usePropertyContext } from '../../context/PropertyContext';
 import { PropertyFilterBar } from '../property/PropertyFilterBar';
 import { PropertyCard } from '../property/PropertyCard';
 import { PropertyMapView } from '../property/PropertyMapView';
-import { LayoutGrid, List, Map as MapIcon, SearchX, RotateCcw, X } from 'lucide-react';
+import { LayoutGrid, List, Map as MapIcon, Columns2, SearchX, RotateCcw, X } from 'lucide-react';
 
 export const ListingPage: React.FC = () => {
   const { filteredProperties, filters, updateFilter, resetFilters } = usePropertyContext();
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
+  const [viewMode, setViewMode] = useState<'split' | 'map' | 'grid' | 'list'>('split');
+  const [focusedMapPropertyId, setFocusedMapPropertyId] = useState<string | null>(null);
 
   const hasActiveFilters = Boolean(
     filters.city ||
@@ -19,9 +20,19 @@ export const ListingPage: React.FC = () => {
       filters.geofence
   );
 
+  const handleFocusOnMap = (propertyId: string) => {
+    setFocusedMapPropertyId(propertyId);
+    if (viewMode !== 'split' && viewMode !== 'map') {
+      setViewMode('split');
+    }
+    if (window.innerWidth < 1024) {
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-w-0">
-      {/* Page Title & Purpose Indicator */}
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 space-y-6 min-w-0">
+      {/* Page Title & View Mode Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-0.5">
@@ -37,43 +48,59 @@ export const ListingPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-lg self-start sm:self-auto">
+        {/* View Mode Switcher */}
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-white border border-slate-200 rounded-lg self-start sm:self-auto">
           <button
+            type="button"
+            onClick={() => setViewMode('split')}
+            className={`px-2.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              viewMode === 'split'
+                ? 'bg-emerald-700 text-white'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Split View: Interactive Map + Property Cards"
+          >
+            <Columns2 className="w-3.5 h-3.5" />
+            <span>Map + Grid</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            className={`px-2.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              viewMode === 'map'
+                ? 'bg-emerald-700 text-white'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Full Interactive Map & Geofence"
+          >
+            <MapIcon className="w-3.5 h-3.5" />
+            <span>Full Map</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`px-2.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
               viewMode === 'grid'
                 ? 'bg-slate-900 text-white'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
             title="Grid View"
           >
-            <LayoutGrid className="w-4 h-4" />
-            <span className="hidden sm:inline">Grid</span>
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Grid</span>
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`px-2.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
               viewMode === 'list'
                 ? 'bg-slate-900 text-white'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
             title="List View"
           >
-            <List className="w-4 h-4" />
-            <span className="hidden sm:inline">List</span>
-          </button>
-          <button
-            onClick={() => setViewMode('map')}
-            className={`p-1.5 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
-              viewMode === 'map'
-                ? 'bg-emerald-700 text-white'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-            title="Interactive Map & Geofence"
-          >
-            <MapIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Map</span>
+            <List className="w-3.5 h-3.5" />
+            <span>List</span>
           </button>
         </div>
       </div>
@@ -133,9 +160,57 @@ export const ListingPage: React.FC = () => {
         </div>
       )}
 
-      {/* Results View: Interactive Map OR Grid/List */}
+      {/* Results View */}
       {viewMode === 'map' ? (
-        <PropertyMapView />
+        <PropertyMapView
+          layout="full"
+          focusedPropertyId={focusedMapPropertyId}
+          onSelectProperty={setFocusedMapPropertyId}
+        />
+      ) : viewMode === 'split' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full min-w-0">
+          {/* Interactive Geographic Map Column */}
+          <div className="lg:col-span-6 xl:col-span-5 lg:sticky lg:top-20 min-w-0 w-full">
+            <PropertyMapView
+              layout="embedded"
+              focusedPropertyId={focusedMapPropertyId}
+              onSelectProperty={setFocusedMapPropertyId}
+            />
+          </div>
+
+          {/* Synchronized Property Cards Column */}
+          <div className="lg:col-span-6 xl:col-span-7 min-w-0 w-full">
+            {filteredProperties.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center space-y-3">
+                <SearchX className="w-12 h-12 text-slate-300 mx-auto" />
+                <h3 className="text-base font-bold text-slate-800">
+                  No properties matched your criteria
+                </h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Try adjusting your budget range, expanding or clearing the map geofence, or resetting filters to browse all nationwide listings.
+                </p>
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset All Filters</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 w-full">
+                {filteredProperties.map((prop) => (
+                  <PropertyCard
+                    key={prop.id}
+                    property={prop}
+                    onFocusMap={handleFocusOnMap}
+                    isMapSelected={focusedMapPropertyId === prop.id}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       ) : filteredProperties.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center max-w-lg mx-auto space-y-3">
           <SearchX className="w-12 h-12 text-slate-300 mx-auto" />
@@ -155,12 +230,18 @@ export const ListingPage: React.FC = () => {
         <div
           className={`grid gap-6 w-full ${
             viewMode === 'grid'
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'grid-cols-1 max-w-5xl mx-auto'
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
+              : 'grid-cols-1 max-w-6xl mx-auto'
           }`}
         >
           {filteredProperties.map((prop) => (
-            <PropertyCard key={prop.id} property={prop} />
+            <PropertyCard
+              key={prop.id}
+              property={prop}
+              layout={viewMode === 'list' ? 'list' : 'grid'}
+              onFocusMap={handleFocusOnMap}
+              isMapSelected={focusedMapPropertyId === prop.id}
+            />
           ))}
         </div>
       )}

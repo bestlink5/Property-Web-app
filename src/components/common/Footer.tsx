@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="w-full bg-slate-900 text-slate-300 text-xs border-t border-slate-800">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-10 sm:mb-12">
           {/* Brand Col */}
           <div className="lg:col-span-2 min-w-0 space-y-4">
@@ -144,6 +144,17 @@ export const Footer: React.FC = () => {
                   className="hover:text-emerald-400 transition-colors cursor-pointer"
                 >
                   Admin Verification Portal
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveView('saved');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-emerald-400 transition-colors cursor-pointer"
+                >
+                  Saved Properties
                 </button>
               </li>
               <li>

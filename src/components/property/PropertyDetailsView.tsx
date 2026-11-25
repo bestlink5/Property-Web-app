@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { formatPKR, formatFullPKR, formatArea, getWhatsAppUrl, getTelUrl } from '../../utils/formatters';
+import {
+  FORM_STORAGE_KEYS,
+  getRememberedContact,
+  readStoredJson,
+  saveRememberedContact,
+  writeStoredJson,
+} from '../../utils/formMemory';
 import { ImageGallery } from './ImageGallery';
 import { AreaUnitConverter } from './AreaUnitConverter';
 import { MortgageCalculator } from './MortgageCalculator';
@@ -33,6 +40,9 @@ import {
   Check,
 } from 'lucide-react';
 
+const DEFAULT_INQUIRY_MESSAGE =
+  'Assalam-o-Alaikum, I am interested in this property. Please contact me with more information.';
+
 export const PropertyDetailsView: React.FC = () => {
   const {
     properties,
@@ -43,17 +53,55 @@ export const PropertyDetailsView: React.FC = () => {
     navigateToAgent,
     openEditPropertyModal,
     addToast,
+    currentUser,
   } = usePropertyContext();
 
-  const [inquiryName, setInquiryName] = useState('');
-  const [inquiryPhone, setInquiryPhone] = useState('');
-  const [inquiryEmail, setInquiryEmail] = useState('');
-  const [inquiryMessage, setInquiryMessage] = useState(
-    'Assalam-o-Alaikum, I am interested in this property. Please contact me with more information.'
+  const property = properties.find((p) => p.id === selectedPropertyId) || properties[0];
+
+  const rememberedContact = getRememberedContact();
+  const [inquiryName, setInquiryName] = useState(
+    rememberedContact.name ?? currentUser?.name ?? ''
   );
+  const [inquiryPhone, setInquiryPhone] = useState(
+    rememberedContact.phone ?? currentUser?.phone ?? ''
+  );
+  const [inquiryEmail, setInquiryEmail] = useState(
+    rememberedContact.email ?? currentUser?.email ?? ''
+  );
+  const [inquiryMessage, setInquiryMessage] = useState(() => {
+    if (!property) return DEFAULT_INQUIRY_MESSAGE;
+    const drafts = readStoredJson<Record<string, string>>(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, {});
+    return drafts[property.id] ?? DEFAULT_INQUIRY_MESSAGE;
+  });
   const [inquirySent, setInquirySent] = useState(false);
 
-  const property = properties.find((p) => p.id === selectedPropertyId) || properties[0];
+  useEffect(() => {
+    if (!property) return;
+    const drafts = readStoredJson<Record<string, string>>(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, {});
+    setInquiryMessage(drafts[property.id] ?? DEFAULT_INQUIRY_MESSAGE);
+    setInquirySent(false);
+  }, [property?.id]);
+
+  useEffect(() => {
+    if (inquiryName.trim() || inquiryPhone.trim() || inquiryEmail.trim()) {
+      saveRememberedContact({
+        name: inquiryName,
+        phone: inquiryPhone,
+        email: inquiryEmail,
+      });
+    }
+  }, [inquiryName, inquiryPhone, inquiryEmail]);
+
+  useEffect(() => {
+    if (!property) return;
+    const drafts = readStoredJson<Record<string, string>>(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, {});
+    if (inquiryMessage && inquiryMessage !== DEFAULT_INQUIRY_MESSAGE) {
+      drafts[property.id] = inquiryMessage;
+    } else {
+      delete drafts[property.id];
+    }
+    writeStoredJson(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, drafts);
+  }, [property?.id, inquiryMessage]);
 
   if (!property) {
     return (
@@ -90,6 +138,15 @@ export const PropertyDetailsView: React.FC = () => {
       addToast('Please provide your name and contact phone number.', 'error');
       return;
     }
+    saveRememberedContact({
+      name: inquiryName,
+      phone: inquiryPhone,
+      email: inquiryEmail,
+    });
+    const drafts = readStoredJson<Record<string, string>>(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, {});
+    delete drafts[property.id];
+    writeStoredJson(FORM_STORAGE_KEYS.INQUIRY_DRAFTS, drafts);
+    setInquiryMessage(DEFAULT_INQUIRY_MESSAGE);
     setInquirySent(true);
     addToast(
       `Inquiry successfully submitted to ${property.agent.name}. The agent will reach out shortly!`,
@@ -103,7 +160,7 @@ export const PropertyDetailsView: React.FC = () => {
     .slice(0, 3);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 min-w-0">
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 space-y-6 min-w-0">
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
         <button

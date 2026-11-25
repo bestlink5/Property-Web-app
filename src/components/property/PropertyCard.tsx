@@ -22,19 +22,43 @@ import {
 interface PropertyCardProps {
   property: Property;
   compact?: boolean;
+  layout?: 'grid' | 'list';
+  onFocusMap?: (propertyId: string) => void;
+  isMapSelected?: boolean;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = false }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({
+  property,
+  compact = false,
+  layout = 'grid',
+  onFocusMap,
+  isMapSelected = false,
+}) => {
   const { navigateToProperty, toggleSaveProperty, isPropertySaved, openEditPropertyModal } = usePropertyContext();
   const [imageError, setImageError] = useState(false);
   const isSaved = isPropertySaved(property.id);
 
   const mainImage = property.images && property.images.length > 0 ? property.images[0] : null;
+  const isList = layout === 'list';
 
   return (
-    <div className="w-full min-w-0 group bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative">
-      {/* Top Image Showcase */}
-      <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
+    <div
+      className={`w-full min-w-0 group bg-white rounded-xl border transition-all duration-200 flex flex-col ${
+        isList ? 'md:flex-row' : ''
+      } overflow-hidden relative ${
+        isMapSelected
+          ? 'border-emerald-600 ring-2 ring-emerald-500/20 shadow-md'
+          : 'border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md'
+      }`}
+    >
+      {/* Top / Side Image Showcase */}
+      <div
+        className={`relative bg-slate-100 overflow-hidden ${
+          isList
+            ? 'aspect-16/10 w-full md:aspect-auto md:w-72 lg:w-80 md:min-h-[215px] shrink-0'
+            : 'aspect-16/10 w-full'
+        }`}
+      >
         {!imageError && mainImage ? (
           <img
             src={mainImage}
@@ -217,25 +241,41 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, compact = 
           </div>
         </div>
 
-        {/* Footer Actions: WhatsApp Quick Contact + Details Button */}
+        {/* Footer Actions: WhatsApp Quick Contact + Optional Map Pin + Details Button */}
         <div className="flex items-center justify-between gap-2 pt-1">
           <a
             href={getWhatsAppUrl(property.agent.whatsapp, property.title, property.id)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0"
             title="Chat directly on WhatsApp"
           >
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
 
+          {onFocusMap && (
+            <button
+              type="button"
+              onClick={() => onFocusMap(property.id)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
+                isMapSelected
+                  ? 'bg-emerald-700 border-emerald-700 text-white'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-800'
+              }`}
+              title="Locate property pin on map"
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Map</span>
+            </button>
+          )}
+
           <button
             onClick={() => navigateToProperty(property.id)}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 min-w-0 flex items-center justify-center gap-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
           >
             <span>View Details</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </div>
       </div>

@@ -1,6 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
+import {
+  FORM_STORAGE_KEYS,
+  getRememberedContact,
+  readStoredJson,
+  removeStoredKey,
+  saveRememberedContact,
+  writeStoredJson,
+} from '../../utils/formMemory';
 import { X, Lock, Mail, User, Phone, Building, ShieldCheck, CheckCircle2 } from 'lucide-react';
+
+interface RememberedAuthFields {
+  email: string;
+  name: string;
+  phone: string;
+  role: 'buyer' | 'seller' | 'agent';
+  agencyName: string;
+  rememberDetails: boolean;
+}
 
 export const AuthModal: React.FC = () => {
   const {
@@ -13,12 +30,38 @@ export const AuthModal: React.FC = () => {
     switchDemoRole,
   } = usePropertyContext();
 
-  const [email, setEmail] = useState('');
+  const savedAuth = readStoredJson<Partial<RememberedAuthFields>>(
+    FORM_STORAGE_KEYS.AUTH_FORM_MEMORY,
+    {}
+  );
+  const rememberedContact = getRememberedContact();
+
+  const [rememberDetails, setRememberDetails] = useState<boolean>(
+    savedAuth.rememberDetails ?? true
+  );
+  const [email, setEmail] = useState(savedAuth.email ?? rememberedContact.email ?? '');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'buyer' | 'seller' | 'agent'>('buyer');
-  const [agencyName, setAgencyName] = useState('');
+  const [name, setName] = useState(savedAuth.name ?? rememberedContact.name ?? '');
+  const [phone, setPhone] = useState(savedAuth.phone ?? rememberedContact.phone ?? '');
+  const [role, setRole] = useState<'buyer' | 'seller' | 'agent'>(savedAuth.role ?? 'buyer');
+  const [agencyName, setAgencyName] = useState(
+    savedAuth.agencyName ?? rememberedContact.agencyName ?? ''
+  );
+
+  useEffect(() => {
+    if (!rememberDetails) {
+      removeStoredKey(FORM_STORAGE_KEYS.AUTH_FORM_MEMORY);
+      return;
+    }
+    writeStoredJson<RememberedAuthFields>(FORM_STORAGE_KEYS.AUTH_FORM_MEMORY, {
+      email,
+      name,
+      phone,
+      role,
+      agencyName,
+      rememberDetails: true,
+    });
+  }, [email, name, phone, role, agencyName, rememberDetails]);
 
   if (!showAuthModal) return null;
 
@@ -30,14 +73,23 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
+    if (rememberDetails) {
+      saveRememberedContact({
+        email,
+        name: authModalTab === 'register' ? name : undefined,
+        phone: authModalTab === 'register' ? phone : undefined,
+        agencyName: authModalTab === 'register' && role === 'agent' ? agencyName : undefined,
+      });
+    }
+
     if (authModalTab === 'login') {
       setCurrentUser({
         id: `usr-${Date.now()}`,
-        name: email.split('@')[0].toUpperCase(),
+        name: (name || email.split('@')[0]).toUpperCase(),
         email,
-        phone: '+92 300 1234567',
+        phone: phone || '+92 300 1234567',
         role: 'buyer',
-        savedPropertyIds: ['PM-101'],
+        savedPropertyIds: [],
       });
       addToast(`Signed in successfully as ${email}! (Client session)`, 'success');
     } else {
@@ -218,6 +270,17 @@ export const AuthModal: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* Remember details checkbox */}
+          <label className="flex items-center gap-2 text-[11px] font-medium text-slate-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberDetails}
+              onChange={(e) => setRememberDetails(e.target.checked)}
+              className="accent-emerald-700 rounded"
+            />
+            <span>Remember my details for next time</span>
+          </label>
 
           {/* Submit */}
           <button
