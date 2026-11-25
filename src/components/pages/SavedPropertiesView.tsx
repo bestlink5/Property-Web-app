@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { PropertyCard } from '../property/PropertyCard';
 import { formatPKR } from '../../utils/formatters';
@@ -31,11 +31,62 @@ export const SavedPropertiesView: React.FC = () => {
     setAuthModalTab,
   } = usePropertyContext();
 
-  const [purposeFilter, setPurposeFilter] = useState<SavedPurposeFilter>('all');
+const SAVED_VIEW_PREFS_KEY = 'propertymarkaz_saved_prefs_v1';
+
+  const [purposeFilter, setPurposeFilter] = useState<SavedPurposeFilter>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_VIEW_PREFS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed.purposeFilter === 'all' || parsed.purposeFilter === 'buy' || parsed.purposeFilter === 'rent') {
+        return parsed.purposeFilter;
+      }
+    } catch {
+      // ignore
+    }
+    return 'all';
+  });
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SavedSortOption>('saved-order');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<SavedSortOption>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_VIEW_PREFS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (
+        parsed.sortBy === 'saved-order' ||
+        parsed.sortBy === 'price-asc' ||
+        parsed.sortBy === 'price-desc' ||
+        parsed.sortBy === 'area-desc'
+      ) {
+        return parsed.sortBy;
+      }
+    } catch {
+      // ignore
+    }
+    return 'saved-order';
+  });
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_VIEW_PREFS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed.viewMode === 'grid' || parsed.viewMode === 'list') {
+        return parsed.viewMode;
+      }
+    } catch {
+      // ignore
+    }
+    return 'grid';
+  });
   const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SAVED_VIEW_PREFS_KEY,
+        JSON.stringify({ purposeFilter, sortBy, viewMode })
+      );
+    } catch {
+      // ignore
+    }
+  }, [purposeFilter, sortBy, viewMode]);
 
   // Preserve saved bookmark order (most recently saved first) while matching live property records
   const savedProperties = useMemo(() => {

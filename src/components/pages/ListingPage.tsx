@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { PropertyFilterBar } from '../property/PropertyFilterBar';
 import { PropertyCard } from '../property/PropertyCard';
 import { PropertyMapView } from '../property/PropertyMapView';
 import { LayoutGrid, List, Map as MapIcon, Columns2, SearchX, RotateCcw, X } from 'lucide-react';
 
+type ListingViewMode = 'split' | 'map' | 'grid' | 'list';
+const LISTING_VIEW_MODE_KEY = 'propertymarkaz_listing_view_mode_v1';
+
 export const ListingPage: React.FC = () => {
   const { filteredProperties, filters, updateFilter, resetFilters } = usePropertyContext();
-  const [viewMode, setViewMode] = useState<'split' | 'map' | 'grid' | 'list'>('split');
+  const [viewMode, setViewMode] = useState<ListingViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(LISTING_VIEW_MODE_KEY);
+      if (saved === 'split' || saved === 'map' || saved === 'grid' || saved === 'list') {
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return 'split';
+  });
   const [focusedMapPropertyId, setFocusedMapPropertyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LISTING_VIEW_MODE_KEY, viewMode);
+    } catch {
+      // ignore
+    }
+  }, [viewMode]);
 
   const hasActiveFilters = Boolean(
     filters.city ||

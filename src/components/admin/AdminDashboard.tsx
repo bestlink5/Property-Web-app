@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePropertyContext } from '../../context/PropertyContext';
 import { Property, PropertyStatus } from '../../types/property';
 import { formatPKR, formatArea } from '../../utils/formatters';
@@ -47,10 +47,28 @@ export const AdminDashboard: React.FC = () => {
     addToast('Exported properties.json successfully!', 'success');
   };
 
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>(() => {
+    try {
+      const saved = localStorage.getItem('propertymarkaz_admin_tab_v1');
+      if (saved === 'all' || saved === 'pending' || saved === 'approved' || saved === 'rejected') {
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return 'pending';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [rejectingPropId, setRejectingPropId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('Incomplete property documentation or invalid contact');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('propertymarkaz_admin_tab_v1', activeTab);
+    } catch {
+      // ignore
+    }
+  }, [activeTab]);
 
   // Stats
   const totalCount = properties.length;

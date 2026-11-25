@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { Property, PropertyFilterState, UserProfile, PropertyStatus, Agent } from '../types/property';
 import { DEMO_PROPERTIES, DEMO_AGENTS } from '../data/mockProperties';
 import { isPropertyInGeofence } from '../utils/geo';
@@ -99,6 +99,113 @@ const AGENTS_STORAGE_KEY = 'propertymarkaz_agents_v1';
 const SAVED_STORAGE_KEY = 'propertymarkaz_saved_v1';
 const SAVED_BY_USER_STORAGE_KEY = 'propertymarkaz_saved_by_user_v1';
 const USER_STORAGE_KEY = 'propertymarkaz_user_v1';
+const NAV_STATE_STORAGE_KEY = 'propertymarkaz_nav_state_v1';
+const FILTERS_STORAGE_KEY = 'propertymarkaz_filters_v1';
+
+const VALID_APP_VIEWS: readonly AppView[] = [
+  'home',
+  'buy',
+  'rent',
+  'sell',
+  'listings',
+  'saved',
+  'details',
+  'agent',
+  'admin',
+  'about',
+  'contact',
+  'faq',
+  'privacy',
+  'terms',
+];
+
+interface PersistedNavState {
+  activeView: AppView;
+  selectedPropertyId: string | null;
+  selectedAgentId: string | null;
+}
+
+const isValidAppView = (value: string): value is AppView =>
+  (VALID_APP_VIEWS as readonly string[]).includes(value);
+
+const parseHashNavState = (): Partial<PersistedNavState> | null => {
+  try {
+    const rawHash = window.location.hash || '';
+    if (!rawHash || rawHash === '#') return null;
+    const cleaned = rawHash.replace(/^#\/?/, '').trim();
+    if (!cleaned) {
+      return { activeView: 'home', selectedPropertyId: null, selectedAgentId: null };
+    }
+    const [segment, param] = cleaned.split('/');
+    if (segment === 'details' && param) {
+      return {
+        activeView: 'details',
+        selectedPropertyId: decodeURIComponent(param),
+      };
+    }
+    if (segment === 'agent' && param) {
+      return {
+        activeView: 'agent',
+        selectedAgentId: decodeURIComponent(param),
+      };
+    }
+    if (isValidAppView(segment)) {
+      return { activeView: segment };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const buildHashFromNavState = (
+  view: AppView,
+  propertyId: string | null,
+  agentId: string | null
+): string => {
+  if (view === 'details' && propertyId) {
+    return `#/details/${encodeURIComponent(propertyId)}`;
+  }
+  if (view === 'agent' && agentId) {
+    return `#/agent/${encodeURIComponent(agentId)}`;
+  }
+  if (view === 'home') {
+    return '#/';
+  }
+  return `#/${view}`;
+};
+
+const readInitialNavState = (): PersistedNavState => {
+  let stored: Partial<PersistedNavState> = {};
+  try {
+    const raw = localStorage.getItem(NAV_STATE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<PersistedNavState>;
+      if (parsed && typeof parsed.activeView === 'string' && isValidAppView(parsed.activeView)) {
+        stored = parsed;
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+
+  const fromHash = parseHashNavState();
+  const activeView = fromHash?.activeView ?? stored.activeView ?? 'home';
+  const selectedPropertyId =
+    fromHash?.selectedPropertyId !== undefined
+      ? fromHash.selectedPropertyId
+      : stored.selectedPropertyId ?? null;
+  const selectedAgentId =
+    fromHash?.selectedAgentId !== undefined
+      ? fromHash.selectedAgentId
+      : stored.selectedAgentId ?? null;
+
+  return {
+    activeView,
+    selectedPropertyId,
+    selectedAgentId,
+  };
+};
 
 const getUserSavedKey = (user: UserProfile): string =>
   (user.email ? user.email.trim().toLowerCase() : user.id);
@@ -167,10 +274,32 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
   });
 
-  const [filters, setFilters] = useState<PropertyFilterState>(DEFAULT_FILTERS);
-  const [activeView, setActiveView] = useState<AppView>('home');
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<PropertyFilterState>(() => {
+    try {
+      const savedFilters = localStorage.getItem(FILTERS_STORAGE_KEY);
+      if (savedFilters) {
+        return { ...DEFAULT_FILTERS, ...JSON.parse(savedFilters) };
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_FILTERS;
+  });
+
+  const initialNav = useRef<PersistedNavState | null>(null);
+  if (!initialNav.current) {
+    initialNav.current = readInitialNavState();
+  }
+
+  const [activeView, setActiveView] = useState<AppView>(initialNav.current.activeView);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
+    initialNav.current.selectedPropertyId
+  );
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(
+    initialNav.current.selectedAgentId
+  );
+  const isFirstNavSyncRef = useRef(true);
+  const skipHashUpdateRef = useRef(false);
   const [notifications, setNotifications] = useState<ToastNotification[]>([]);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
@@ -222,6 +351,64 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
       // ignore
     }
   }, [currentUser]);
+
+  // Persist filters across refresh
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // ignore
+    }
+  }, [filters]);
+
+  // Persist current view & selection across refresh + keep URL hash synchronized
+  useEffect(() => {
+    try {
+      const payload: PersistedNavState = {
+        activeView,
+        selectedPropertyId,
+        selectedAgentId,
+      };
+      localStorage.setItem(NAV_STATE_STORAGE_KEY, JSON.stringify(payload));
+
+      const targetHash = buildHashFromNavState(activeView, selectedPropertyId, selectedAgentId);
+      if (skipHashUpdateRef.current) {
+        skipHashUpdateRef.current = false;
+      } else if (window.location.hash !== targetHash) {
+        if (isFirstNavSyncRef.current) {
+          window.history.replaceState(null, '', targetHash);
+        } else {
+          window.history.pushState(null, '', targetHash);
+        }
+      }
+      isFirstNavSyncRef.current = false;
+    } catch {
+      // ignore history/storage errors in restricted sandboxes
+    }
+  }, [activeView, selectedPropertyId, selectedAgentId]);
+
+  // Handle browser Back/Forward hash navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const parsed = parseHashNavState();
+      if (!parsed || !parsed.activeView) return;
+      skipHashUpdateRef.current = true;
+      setActiveView(parsed.activeView);
+      if (parsed.selectedPropertyId !== undefined) {
+        setSelectedPropertyId(parsed.selectedPropertyId);
+      }
+      if (parsed.selectedAgentId !== undefined) {
+        setSelectedAgentId(parsed.selectedAgentId);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
+  }, []);
 
   const addToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
